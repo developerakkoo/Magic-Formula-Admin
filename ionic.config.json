@@ -1,0 +1,7 @@
+{
+  "name": "magic-admin",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
