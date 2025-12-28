@@ -1,4 +1,4 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true"class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
@@ -14,8 +14,100 @@
     </ion-toolbar>
   </ion-header>
 
-  <div id="container">
-    <strong class="capitalize">{{ folder }}</strong>
-    <p>Explore <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-  </div>
+  <ion-grid fixed>
+ <div class="header-title">
+   <h2>Users Management</h2>
+ </div>
+
+    <ion-row>
+      <ion-col size="3">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>Total Users</ion-card-subtitle>
+            <ion-card-title>55</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            Awesome content
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="3">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>Live User (Today)</ion-card-subtitle>
+            <ion-card-title>12</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            Awesome content
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="3">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>Subscribed Users</ion-card-subtitle>
+            <ion-card-title>55</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            Awesome content
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="3">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>Unsubscribed Users</ion-card-subtitle>
+            <ion-card-title>3</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            Awesome content
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  <hr>
+
+  <h2 class="header-title">Earnings Management</h2>
+  <ion-row>
+    <ion-col size="3"><ion-card>
+      <ion-card-header>
+        <ion-card-subtitle>Today's Earnings</ion-card-subtitle>
+        <ion-card-title>₹145,000</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        Awesome content
+      </ion-card-content>
+    </ion-card></ion-col>
+    <ion-col size="3"><ion-card>
+      <ion-card-header>
+        <ion-card-subtitle>Monthly Earnings</ion-card-subtitle>
+        <ion-card-title>₹445,000</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        Awesome content
+      </ion-card-content>
+    </ion-card></ion-col>
+    <ion-col size="3"><ion-card>
+      <ion-card-header>
+        <ion-card-subtitle>Total Earnings</ion-card-subtitle>
+        <ion-card-title>₹11,45,000</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        Awesome content
+      </ion-card-content>
+    </ion-card></ion-col>
+    <ion-col size="3"><ion-card>
+      <ion-card-header>
+        <ion-card-subtitle>Best Selling Plan</ion-card-subtitle>
+        <ion-card-title>Plan name</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        Awesome content
+      </ion-card-content>
+    </ion-card></ion-col>
+  </ion-row>
+  
+  </ion-grid>
+
+
 </ion-content>

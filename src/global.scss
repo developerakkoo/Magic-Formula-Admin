@@ -35,3 +35,16 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
+
+*{
+    font-family: "Zalando Sans", sans-serif;
+}
+.header-title{
+    display: flex;
+    flex-direction: row;
+    margin-left: 20px;
+}
+ion-card{
+    border-radius: 13px;
+}
+
