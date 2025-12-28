@@ -1,14 +1,30 @@
 <ion-app>
   <ion-split-pane contentId="main-content">
-    <ion-menu contentId="main-content" type="overlay">
-      <ion-content>
-        <ion-list id="inbox-list">
-          <ion-list-header>Magic Formula</ion-list-header>
-          <ion-note>Hello! Admin</ion-note>
+    <ion-menu contentId="main-content" type="overlay" class="admin-menu">
+      <ion-content class="side-menu">
+        <div class="menu-header">
+          <div class="logo-mark">
+            <img src="assets/logo.svg" alt="Magic Formula" />
+          </div>
+          <div class="menu-meta">
+            <p class="eyebrow">Admin Panel</p>
+            <h1>Magic Formula</h1>
+            <p class="sub">Control center</p>
+          </div>
+        </div>
 
+        <ion-list lines="none" class="menu-list">
+          <ion-list-header>Navigation</ion-list-header>
           @for (p of appPages; track p; let i = $index) {
             <ion-menu-toggle auto-hide="false">
-              <ion-item routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false" routerLinkActive="selected">
+              <ion-item
+                class="menu-item"
+                routerDirection="root"
+                [routerLink]="[p.url]"
+                lines="none"
+                detail="false"
+                routerLinkActive="selected"
+              >
                 <ion-icon aria-hidden="true" slot="start" [ios]="p.icon + '-outline'" [md]="p.icon + '-sharp'"></ion-icon>
                 <ion-label>{{ p.title }}</ion-label>
               </ion-item>
@@ -16,6 +32,20 @@
           }
         </ion-list>
 
+        <div class="menu-footer">
+          <p class="footer-title">Support</p>
+          <p class="footer-text">Need help? Contact ops@magicformula.io</p>
+          <ion-button
+            class="logout-btn"
+            expand="block"
+            fill="solid"
+            color="medium"
+            routerLink="/login"
+          >
+            <ion-icon slot="start" name="log-out-outline"></ion-icon>
+            Logout
+          </ion-button>
+        </div>
       </ion-content>
     </ion-menu>
     <ion-router-outlet id="main-content"></ion-router-outlet>

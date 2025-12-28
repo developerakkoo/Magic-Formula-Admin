@@ -1,33 +1,75 @@
 
 
-<ion-content [fullscreen]="true">
-<ion-grid>
-  <ion-row>
-    <ion-col size="4" offset="4">
-      <ion-card color="light">
-        <ion-card-header>
-          <ion-card-subtitle>Login with your admin credentials to continue</ion-card-subtitle>
-          <ion-card-title>Magic Formula Admin</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <form [formGroup]="form" (ngSubmit)="onSubmit()">
-              <ion-input fill="outline" label="Email" label-placement="floating" 
-               required formControlName="email" type="email">
-              <ion-icon slot="start" name="mail"></ion-icon>
-              </ion-input>
-              <br>
-              <ion-input fill="outline" label="Password" label-placement="floating" 
-               required formControlName="password" type="password">
-              <ion-icon slot="start" name="shield-checkmark"></ion-icon>
-              </ion-input>
-            <br>
-              <ion-button mode="ios" fill="solid" expand="block" color="primary" type="submit" [disabled]="form.invalid">
-              Login
-            </ion-button>
-          </form>
-        </ion-card-content>
-      </ion-card>
-    </ion-col>
-  </ion-row>
-</ion-grid>
+<ion-content [fullscreen]="true" class="login-page">
+  <div class="auth-layout">
+    <section class="brand-panel">
+      <div class="brand-meta">
+        <span class="badge">Admin Panel</span>
+        <div class="brand-logo">
+          <img src="assets/logo.svg" alt="Magic Formula" />
+        </div>
+      </div>
+      <h1>Magic Formula Console</h1>
+      <p>Secure access for finance, operations, and leadership.</p>
+      <div class="bullet-points">
+        <div class="point">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          <span>Hardened access control</span>
+        </div>
+        <div class="point">
+          <ion-icon name="bar-chart-outline"></ion-icon>
+          <span>Realtime dashboards</span>
+        </div>
+        <div class="point">
+          <ion-icon name="headset-outline"></ion-icon>
+          <span>Priority support</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-panel">
+      <div class="form-header">
+        <p class="eyebrow">Sign in</p>
+        <h2>Welcome back</h2>
+        <p class="sub">Use your admin credentials to continue.</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-body">
+        <div class="input-group">
+          <label>Email</label>
+          <div class="input-shell">
+            <ion-icon name="mail-outline"></ion-icon>
+            <ion-input
+              formControlName="email"
+              type="email"
+              placeholder="work.email@company.com"
+              [clearOnEdit]="true"
+            ></ion-input>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Password</label>
+          <div class="input-shell">
+            <ion-icon name="lock-closed-outline"></ion-icon>
+            <ion-input
+              formControlName="password"
+              type="password"
+              placeholder="Enter your password"
+              [clearOnEdit]="false"
+            ></ion-input>
+          </div>
+        </div>
+
+        <ion-button
+          class="submit-btn"
+          expand="block"
+          type="submit"
+          [disabled]="form.invalid"
+        >
+          Login
+        </ion-button>
+      </form>
+    </section>
+  </div>
 </ion-content>

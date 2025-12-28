@@ -1,4 +1,4 @@
-<ion-header [translucent]="true"class="ion-no-border">
+<ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
@@ -7,107 +7,183 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">{{ folder }}</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="dashboard-page">
+  <div class="dashboard-shell">
+    <div class="page-header">
+      <div>
+        <p class="eyebrow">Admin dashboard</p>
+        <h1>{{ folder }}</h1>
+        <p class="sub">Business overview, user activity, and revenue snapshots.</p>
+      </div>
+      <div class="meta-chip">Live</div>
+    </div>
 
-  <ion-grid fixed>
- <div class="header-title">
-   <h2>Users Management</h2>
- </div>
+    <section class="panel">
+      <div class="panel-head">
+        <p class="eyebrow">Users</p>
+        <h2>Users Management</h2>
+      </div>
+      <div class="cards-grid">
+        <div class="stat-card">
+          <p class="label">Total Users</p>
+          <h3>55</h3>
+          <p class="hint">All registered accounts</p>
+        </div>
+        <div class="stat-card">
+          <p class="label">Live Users (Today)</p>
+          <h3>12</h3>
+          <p class="hint">Active in the last 24h</p>
+        </div>
+        <div class="stat-card">
+          <p class="label">Subscribed Users</p>
+          <h3>55</h3>
+          <p class="hint">On paid plans</p>
+        </div>
+        <div class="stat-card">
+          <p class="label">Unsubscribed Users</p>
+          <h3>3</h3>
+          <p class="hint">Churned this period</p>
+        </div>
+      </div>
+    </section>
 
-    <ion-row>
-      <ion-col size="3">
-        <ion-card>
-          <ion-card-header>
-            <ion-card-subtitle>Total Users</ion-card-subtitle>
-            <ion-card-title>55</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            Awesome content
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-      <ion-col size="3">
-        <ion-card>
-          <ion-card-header>
-            <ion-card-subtitle>Live User (Today)</ion-card-subtitle>
-            <ion-card-title>12</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            Awesome content
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-      <ion-col size="3">
-        <ion-card>
-          <ion-card-header>
-            <ion-card-subtitle>Subscribed Users</ion-card-subtitle>
-            <ion-card-title>55</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            Awesome content
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-      <ion-col size="3">
-        <ion-card>
-          <ion-card-header>
-            <ion-card-subtitle>Unsubscribed Users</ion-card-subtitle>
-            <ion-card-title>3</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            Awesome content
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  <hr>
+    <section class="panel">
+      <div class="panel-head">
+        <p class="eyebrow">Revenue</p>
+        <h2>Earnings Management</h2>
+      </div>
+      <div class="cards-grid">
+        <div class="stat-card">
+          <p class="label">Today's Earnings</p>
+          <h3>₹145,000</h3>
+          <p class="hint">Real-time collections</p>
+        </div>
+        <div class="stat-card">
+          <p class="label">Monthly Earnings</p>
+          <h3>₹445,000</h3>
+          <p class="hint">Current month to date</p>
+        </div>
+        <div class="stat-card">
+          <p class="label">Total Earnings</p>
+          <h3>₹11,45,000</h3>
+          <p class="hint">All-time gross</p>
+        </div>
+        <div class="stat-card">
+          <p class="label">Best Selling Plan</p>
+          <h3>Plan name</h3>
+          <p class="hint">Top performer</p>
+        </div>
+      </div>
+    </section>
 
-  <h2 class="header-title">Earnings Management</h2>
-  <ion-row>
-    <ion-col size="3"><ion-card>
-      <ion-card-header>
-        <ion-card-subtitle>Today's Earnings</ion-card-subtitle>
-        <ion-card-title>₹145,000</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        Awesome content
-      </ion-card-content>
-    </ion-card></ion-col>
-    <ion-col size="3"><ion-card>
-      <ion-card-header>
-        <ion-card-subtitle>Monthly Earnings</ion-card-subtitle>
-        <ion-card-title>₹445,000</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        Awesome content
-      </ion-card-content>
-    </ion-card></ion-col>
-    <ion-col size="3"><ion-card>
-      <ion-card-header>
-        <ion-card-subtitle>Total Earnings</ion-card-subtitle>
-        <ion-card-title>₹11,45,000</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        Awesome content
-      </ion-card-content>
-    </ion-card></ion-col>
-    <ion-col size="3"><ion-card>
-      <ion-card-header>
-        <ion-card-subtitle>Best Selling Plan</ion-card-subtitle>
-        <ion-card-title>Plan name</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        Awesome content
-      </ion-card-content>
-    </ion-card></ion-col>
-  </ion-row>
-  
-  </ion-grid>
+    <section class="panel analytics-section">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">Analytics</p>
+          <h2>Subscription Analytics</h2>
+          <p class="section-subtitle">Insights into subscription performance</p>
+        </div>
+        <div class="date-filters">
+          <ion-button 
+            [fill]="selectedDateRange === 'today' ? 'solid' : 'outline'"
+            size="small"
+            (click)="onDateRangeChange('today')"
+            [disabled]="isLoading">
+            Today
+          </ion-button>
+          <ion-button 
+            [fill]="selectedDateRange === '7' ? 'solid' : 'outline'"
+            size="small"
+            (click)="onDateRangeChange('7')"
+            [disabled]="isLoading">
+            7 Days
+          </ion-button>
+          <ion-button 
+            [fill]="selectedDateRange === '30' ? 'solid' : 'outline'"
+            size="small"
+            (click)="onDateRangeChange('30')"
+            [disabled]="isLoading">
+            30 Days
+          </ion-button>
+          <ion-button 
+            fill="outline"
+            size="small"
+            (click)="showCustomDatePicker = !showCustomDatePicker"
+            [disabled]="isLoading">
+            Custom
+          </ion-button>
+        </div>
+      </div>
 
+      <div *ngIf="showCustomDatePicker" class="custom-date-picker">
+        <ion-datetime
+          presentation="date"
+          [showDefaultButtons]="true"
+          [doneText]="'Apply'"
+          [cancelText]="'Cancel'"
+          (ionChange)="onCustomDateChange($event)"
+          (ionCancel)="showCustomDatePicker = false">
+        </ion-datetime>
+      </div>
 
+      <div *ngIf="isLoading" class="charts-loading">
+        <ion-skeleton-text animated style="width: 100%; height: 300px; border-radius: 12px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 100%; height: 300px; border-radius: 12px;"></ion-skeleton-text>
+      </div>
+
+      <div *ngIf="!isLoading && filteredData.length > 0" class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Most Purchased Plans</h3>
+            <span class="badge" *ngIf="getBestSellerPlan()">Best Seller: {{ getBestSellerPlan() }}</span>
+          </div>
+          <div class="chart-container">
+            <canvas #barChartCanvas></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Revenue by Plan</h3>
+          </div>
+          <div class="chart-container doughnut-wrapper">
+            <canvas #doughnutChartCanvas></canvas>
+            <div class="doughnut-center">
+              <p class="center-label">Total Revenue</p>
+              <p class="center-value">₹{{ formatCurrency(getTotalRevenue()) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading && filteredData.length === 0" class="empty-state">
+        <ion-icon name="bar-chart-outline"></ion-icon>
+        <p>No subscription data available</p>
+      </div>
+
+      <div *ngIf="!isLoading && filteredData.length > 0" class="insights-row">
+        <div class="insight-card">
+          <ion-icon name="trophy-outline"></ion-icon>
+          <div class="insight-content">
+            <p class="insight-label">Best Selling Plan</p>
+            <p class="insight-value">{{ insights.bestSellingPlan }}</p>
+          </div>
+        </div>
+        <div class="insight-card">
+          <ion-icon name="cash-outline"></ion-icon>
+          <div class="insight-content">
+            <p class="insight-label">Highest Revenue Plan</p>
+            <p class="insight-value">{{ insights.highestRevenuePlan }}</p>
+          </div>
+        </div>
+        <div class="insight-card">
+          <ion-icon name="trending-up-outline"></ion-icon>
+          <div class="insight-content">
+            <p class="insight-label">Average Subscription Value</p>
+            <p class="insight-value">₹{{ formatCurrency(insights.averageValue) }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
 </ion-content>
