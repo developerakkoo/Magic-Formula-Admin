@@ -1,0 +1,21 @@
+.modal-content {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+}
+
+ion-list {
+  padding: 16px;
+}
+
+.modal-actions {
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+
+  ion-button {
+    flex: 1;
+  }
+}
+

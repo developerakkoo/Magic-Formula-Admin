@@ -1,13 +1,211 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
-    <ion-title>logs</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>System Logs</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="showFilters = !showFilters">
+        <ion-icon [name]="showFilters ? 'filter' : 'filter-outline'"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">logs</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="logs-page">
+  <div class="logs-container">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div>
+        <p class="eyebrow">System</p>
+        <h1>System Logs</h1>
+        <p class="sub">Monitor system activity and errors</p>
+      </div>
+      <div class="header-actions">
+        <ion-button 
+          fill="outline" 
+          size="small" 
+          color="danger"
+          (click)="clearAllLogs()"
+          [disabled]="isLoading || logs.length === 0">
+          <ion-icon slot="start" name="trash-outline"></ion-icon>
+          Clear All
+        </ion-button>
+        <ion-button 
+          fill="outline" 
+          size="small" 
+          color="danger"
+          (click)="bulkDeleteLogs()"
+          [disabled]="isLoading || selectedLogs.length === 0">
+          <ion-icon slot="start" name="close-circle-outline"></ion-icon>
+          Delete Selected ({{ selectedLogs.length }})
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="filters-panel" *ngIf="showFilters">
+      <div class="row g-3 align-items-end">
+        <!-- Search Input -->
+        <div class="col-12 col-md-4 col-lg-3">
+          <label class="filter-label">Search</label>
+          <ion-input
+            [(ngModel)]="filters.search"
+            (ionInput)="onSearch()"
+            placeholder="Search logs..."
+            fill="outline"
+            clearable="true">
+            <ion-icon slot="start" name="search-outline"></ion-icon>
+          </ion-input>
+        </div>
+
+        <!-- Log Type Filter -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Log Type</label>
+          <ion-select
+            [(ngModel)]="filters.type"
+            (ionChange)="onFilterChange()"
+            placeholder="All Types"
+            interface="popover"
+            fill="outline">
+            <ion-select-option [value]="undefined">All Types</ion-select-option>
+            <ion-select-option value="INFO">Info</ion-select-option>
+            <ion-select-option value="WARNING">Warning</ion-select-option>
+            <ion-select-option value="ERROR">Error</ion-select-option>
+            <ion-select-option value="SUCCESS">Success</ion-select-option>
+          </ion-select>
+        </div>
+
+        <!-- Module Filter -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Module</label>
+          <ion-input
+            [(ngModel)]="filters.module"
+            (ionInput)="onFilterChange()"
+            placeholder="Filter by module"
+            fill="outline"
+            clearable="true">
+          </ion-input>
+        </div>
+
+        <!-- Sort Field -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Sort By</label>
+          <ion-select
+            [(ngModel)]="filters.sortBy"
+            (ionChange)="onFilterChange()"
+            placeholder="Date"
+            interface="popover"
+            fill="outline">
+            <ion-select-option value="createdAt">Date</ion-select-option>
+            <ion-select-option value="type">Type</ion-select-option>
+            <ion-select-option value="module">Module</ion-select-option>
+          </ion-select>
+        </div>
+
+        <!-- Sort Direction -->
+        <div class="col-12 col-md-2 col-lg-2">
+          <label class="filter-label">Order</label>
+          <ion-button
+            expand="block"
+            fill="outline"
+            size="default"
+            (click)="filters.order = filters.order === 'asc' ? 'desc' : 'asc'; onFilterChange()"
+            class="sort-direction-btn">
+            <ion-icon [name]="filters.order === 'asc' ? 'arrow-up-outline' : 'arrow-down-outline'"></ion-icon>
+            <span class="ms-2">{{ filters.order === 'asc' ? 'ASC' : 'DESC' }}</span>
+          </ion-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logs List -->
+    <div class="logs-list-container">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-state">
+        <ion-spinner></ion-spinner>
+        <p>Loading logs...</p>
+      </div>
+
+      <!-- Logs List -->
+      <div *ngIf="!isLoading" class="logs-list">
+        <!-- Selection Actions -->
+        <div *ngIf="logs.length > 0" class="selection-actions">
+          <ion-button fill="clear" size="small" (click)="selectAll()">
+            Select All
+          </ion-button>
+          <ion-button fill="clear" size="small" (click)="clearSelection()">
+            Clear Selection
+          </ion-button>
+          <span class="selection-count">{{ selectedLogs.length }} selected</span>
+        </div>
+
+        <!-- Log Items -->
+        <div
+          *ngFor="let log of logs"
+          class="log-item"
+          [class.selected]="isLogSelected(log._id)">
+          <ion-checkbox 
+            [checked]="isLogSelected(log._id)"
+            (ionChange)="toggleLogSelection(log._id)">
+          </ion-checkbox>
+          
+          <div class="log-content">
+            <div class="log-header">
+              <ion-badge [color]="getLogTypeColor(log.type)">
+                {{ log.type }}
+              </ion-badge>
+              <span class="log-module">{{ log.module }}</span>
+              <span class="log-date">{{ formatDate(log.createdAt) }}</span>
+            </div>
+            <div class="log-message">{{ log.message }}</div>
+            <div class="log-meta" *ngIf="log.userId || log.adminId || log.ipAddress">
+              <span *ngIf="log.userId">
+                User: {{ log.userId.fullName || log.userId.email || log.userId.mobile }}
+              </span>
+              <span *ngIf="log.adminId">
+                Admin: {{ log.adminId.email }}
+              </span>
+              <span *ngIf="log.ipAddress">
+                IP: {{ log.ipAddress }}
+              </span>
+            </div>
+          </div>
+
+          <div class="log-actions">
+            <ion-button fill="clear" size="small" color="danger" (click)="deleteLog(log._id)">
+              <ion-icon name="trash-outline"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && logs.length === 0" class="empty-state">
+        <ion-icon name="document-text-outline"></ion-icon>
+        <p>No logs found</p>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="!isLoading && totalPages > 1" class="pagination">
+        <ion-button
+          fill="clear"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)">
+          <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
+          Previous
+        </ion-button>
+        <span class="page-info">
+          Page {{ currentPage }} of {{ totalPages }} ({{ totalCount }} total)
+        </span>
+        <ion-button
+          fill="clear"
+          [disabled]="currentPage === totalPages"
+          (click)="onPageChange(currentPage + 1)">
+          Next
+          <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+  </div>
 </ion-content>

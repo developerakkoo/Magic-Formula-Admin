@@ -1,0 +1,127 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ isEditMode ? 'Edit Notification' : 'Create Notification' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="notification-form-content">
+  <form [formGroup]="notificationForm" (ngSubmit)="onSubmit()">
+    <div class="form-container">
+      <!-- Basic Information -->
+      <div class="form-section">
+        <h3 class="section-title">Basic Information</h3>
+        
+        <!-- Title -->
+        <ion-item class="form-item">
+          <ion-label position="stacked">Title <span class="required">*</span></ion-label>
+          <ion-input
+            formControlName="title"
+            placeholder="Enter notification title"
+            [class.invalid]="notificationForm.get('title')?.invalid && notificationForm.get('title')?.touched">
+          </ion-input>
+        </ion-item>
+        <div *ngIf="notificationForm.get('title')?.invalid && notificationForm.get('title')?.touched" class="error-message">
+          Title is required (max 200 characters)
+        </div>
+
+        <!-- Message -->
+        <ion-item class="form-item">
+          <ion-label position="stacked">Message <span class="required">*</span></ion-label>
+          <ion-textarea
+            formControlName="message"
+            placeholder="Enter notification message"
+            rows="4"
+            [class.invalid]="notificationForm.get('message')?.invalid && notificationForm.get('message')?.touched">
+          </ion-textarea>
+        </ion-item>
+        <div *ngIf="notificationForm.get('message')?.invalid && notificationForm.get('message')?.touched" class="error-message">
+          Message is required (max 1000 characters)
+        </div>
+
+        <!-- Type -->
+        <ion-item class="form-item">
+          <ion-label position="stacked">Type <span class="required">*</span></ion-label>
+          <ion-select formControlName="type" placeholder="Select type">
+            <ion-select-option value="INFO">Info</ion-select-option>
+            <ion-select-option value="PROMOTION">Promotion</ion-select-option>
+            <ion-select-option value="ALERT">Alert</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Status -->
+        <ion-item class="form-item">
+          <ion-label position="stacked">Status <span class="required">*</span></ion-label>
+          <ion-select formControlName="status" placeholder="Select status">
+            <ion-select-option value="DRAFT">Draft</ion-select-option>
+            <ion-select-option value="SENT">Sent</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>
+
+      <!-- User Selection Section -->
+      <div class="form-section">
+        <h3 class="section-title">
+          Select Users
+          <span class="subtitle">({{ selectedUsers.length }} selected)</span>
+        </h3>
+
+        <!-- Selected Users Chips -->
+        <div *ngIf="selectedUsers.length > 0" class="selected-users-chips">
+          <ion-chip *ngFor="let user of selectedUsers" color="primary">
+            <ion-label>{{ user.fullName || 'No Name' }}</ion-label>
+            <ion-icon name="close-circle" (click)="removeUser(user)"></ion-icon>
+          </ion-chip>
+        </div>
+
+        <!-- User Selection Button -->
+        <div class="user-selection-button">
+          <ion-button expand="block" fill="outline" (click)="openUserSelection()">
+            <ion-icon slot="start" name="people-outline"></ion-icon>
+            {{ selectedUsers.length > 0 ? 'Change Selection' : 'Select Users' }}
+          </ion-button>
+        </div>
+      </div>
+
+      <!-- Preview Section -->
+      <div class="form-section">
+        <h3 class="section-title">Preview</h3>
+        <div class="notification-preview">
+          <div class="preview-header">
+            <ion-badge [color]="getTypeColor(notificationForm.get('type')?.value)">
+              {{ notificationForm.get('type')?.value || 'INFO' }}
+            </ion-badge>
+            <ion-badge [color]="notificationForm.get('status')?.value === 'SENT' ? 'success' : 'medium'">
+              {{ notificationForm.get('status')?.value || 'DRAFT' }}
+            </ion-badge>
+          </div>
+          <h4 class="preview-title">{{ notificationForm.get('title')?.value || 'Notification Title' }}</h4>
+          <p class="preview-message">{{ notificationForm.get('message')?.value || 'Notification message will appear here...' }}</p>
+          <div class="preview-footer">
+            <span *ngIf="selectedUsers.length > 0" class="preview-users">
+              To: {{ selectedUsers.length }} user(s)
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button fill="clear" (click)="cancel()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button fill="solid" (click)="onSubmit()" [disabled]="notificationForm.invalid">
+        {{ isEditMode ? 'Update' : 'Create' }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>
+

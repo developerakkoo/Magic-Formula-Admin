@@ -1,0 +1,78 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ isEditMode ? 'Edit User' : 'Add New User' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modal-content">
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">Full Name <ion-text color="danger">*</ion-text></ion-label>
+        <ion-input formControlName="fullName" placeholder="Enter full name"></ion-input>
+      </ion-item>
+      <ion-item *ngIf="userForm.get('fullName')?.invalid && userForm.get('fullName')?.touched">
+        <ion-text color="danger">Full name is required</ion-text>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Email <ion-text color="danger">*</ion-text></ion-label>
+        <ion-input type="email" formControlName="email" placeholder="user@example.com"></ion-input>
+      </ion-item>
+      <ion-item *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched">
+        <ion-text color="danger">Valid email is required</ion-text>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Mobile <ion-text color="danger">*</ion-text></ion-label>
+        <ion-input 
+          formControlName="mobile" 
+          placeholder="+919876543210"
+          [disabled]="isEditMode">
+        </ion-input>
+      </ion-item>
+      <ion-item *ngIf="userForm.get('mobile')?.invalid && userForm.get('mobile')?.touched">
+        <ion-text color="danger">Valid mobile number is required</ion-text>
+      </ion-item>
+      <ion-item *ngIf="isEditMode">
+        <ion-text color="medium" class="ion-text-wrap">
+          <small>Mobile number cannot be changed</small>
+        </ion-text>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">WhatsApp</ion-label>
+        <ion-input formControlName="whatsapp" placeholder="+919876543210"></ion-input>
+      </ion-item>
+
+      <ion-item *ngIf="!isEditMode">
+        <ion-label position="stacked">Assign Subscription Plan (Optional)</ion-label>
+        <ion-select formControlName="assignPlan" placeholder="Select a plan">
+          <ion-select-option value="">No plan</ion-select-option>
+          <ion-select-option *ngFor="let plan of availablePlans" [value]="plan._id">
+            {{ plan.title }} ({{ plan.durationInMonths }} month{{ plan.durationInMonths > 1 ? 's' : '' }})
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+      
+      <ion-item *ngIf="isLoadingPlans">
+        <ion-label>Loading plans...</ion-label>
+      </ion-item>
+    </ion-list>
+
+    <div class="modal-actions">
+      <ion-button expand="block" fill="outline" (click)="cancel()">
+        Cancel
+      </ion-button>
+      <ion-button expand="block" type="submit" [disabled]="!userForm.valid">
+        {{ isEditMode ? 'Update User' : 'Create User' }}
+      </ion-button>
+    </div>
+  </form>
+</ion-content>
+

@@ -1,13 +1,318 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
-    <ion-title>notifications</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Notifications Management</ion-title>
+    <ion-badge 
+      slot="end" 
+      [color]="socketConnected ? 'success' : 'danger'"
+      class="socket-status-badge">
+      <ion-icon [name]="socketConnected ? 'radio-outline' : 'radio-outline'"></ion-icon>
+      {{ socketConnected ? 'Connected' : 'Disconnected' }}
+    </ion-badge>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">notifications</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="notifications-page">
+  <div class="notifications-container">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Notifications Management</h1>
+        <p class="sub">Manage notifications, send alerts, and track delivery status</p>
+      </div>
+      <div class="header-actions">
+        <ion-button fill="solid" size="small" (click)="addNotification()">
+          <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+          Add Notification
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="filters-panel">
+      <div class="row g-3 align-items-end">
+        <!-- Search Input -->
+        <div class="col-12 col-md-4 col-lg-3">
+          <label class="filter-label">Search</label>
+          <ion-input
+            [(ngModel)]="searchQuery"
+            (ionInput)="onSearch()"
+            placeholder="Search by title"
+            fill="outline"
+            clearable="true">
+            <ion-icon slot="start" name="search-outline"></ion-icon>
+          </ion-input>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Status</label>
+          <ion-select
+            [(ngModel)]="filterStatus"
+            (ionChange)="onFilterChange()"
+            placeholder="All Status"
+            interface="popover"
+            fill="outline">
+            <ion-select-option value="all">All Status</ion-select-option>
+            <ion-select-option value="DRAFT">Draft</ion-select-option>
+            <ion-select-option value="SENT">Sent</ion-select-option>
+          </ion-select>
+        </div>
+
+        <!-- Type Filter -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Type</label>
+          <ion-select
+            [(ngModel)]="filterType"
+            (ionChange)="onFilterChange()"
+            placeholder="All Types"
+            interface="popover"
+            fill="outline">
+            <ion-select-option value="all">All Types</ion-select-option>
+            <ion-select-option value="INFO">Info</ion-select-option>
+            <ion-select-option value="PROMOTION">Promotion</ion-select-option>
+            <ion-select-option value="ALERT">Alert</ion-select-option>
+          </ion-select>
+        </div>
+
+        <!-- Start Date -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Start Date</label>
+          <ion-datetime
+            [(ngModel)]="dateRange.start"
+            (ionChange)="onDateRangeChange()"
+            presentation="date"
+            [max]="dateRange.end || getMaxDate()"
+            placeholder="Start Date"
+            class="date-input">
+          </ion-datetime>
+        </div>
+
+        <!-- End Date -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">End Date</label>
+          <ion-datetime
+            [(ngModel)]="dateRange.end"
+            (ionChange)="onDateRangeChange()"
+            presentation="date"
+            [min]="getMinEndDate() || undefined"
+            [max]="getMaxDate()"
+            placeholder="End Date"
+            class="date-input">
+          </ion-datetime>
+        </div>
+
+        <!-- Sort Field -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Sort By</label>
+          <ion-select
+            [(ngModel)]="sortField"
+            (ionChange)="onSort(sortField)"
+            placeholder="Date"
+            interface="popover"
+            fill="outline">
+            <ion-select-option value="createdAt">Date</ion-select-option>
+            <ion-select-option value="title">Title</ion-select-option>
+            <ion-select-option value="status">Status</ion-select-option>
+          </ion-select>
+        </div>
+
+        <!-- Sort Direction -->
+        <div class="col-12 col-md-2 col-lg-2">
+          <label class="filter-label">Order</label>
+          <ion-button
+            expand="block"
+            fill="outline"
+            size="default"
+            (click)="onSort(sortField)"
+            class="sort-direction-btn">
+            <ion-icon [name]="sortDirection === 'asc' ? 'arrow-up-outline' : 'arrow-down-outline'"></ion-icon>
+            <span class="ms-2">{{ sortDirection === 'asc' ? 'ASC' : 'DESC' }}</span>
+          </ion-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions" *ngIf="selectedNotifications.length > 0">
+      <div class="bulk-info">
+        <span>{{ selectedNotifications.length }} notification(s) selected</span>
+      </div>
+      <div class="bulk-buttons">
+        <ion-button fill="outline" size="small" color="danger" (click)="bulkDelete()">
+          <ion-icon slot="start" name="trash-outline"></ion-icon>
+          Delete Selected
+        </ion-button>
+        <ion-button fill="clear" size="small" (click)="selectedNotifications = []; selectAll = false">
+          Clear Selection
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <ion-skeleton-text animated style="width: 100%; height: 60px; margin-bottom: 12px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 100%; height: 60px; margin-bottom: 12px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 100%; height: 60px;"></ion-skeleton-text>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredNotifications.length === 0" class="empty-state">
+      <ion-icon name="notifications-outline"></ion-icon>
+      <h3>No notifications found</h3>
+      <p>{{ searchQuery ? 'Try adjusting your search criteria' : 'Get started by creating a new notification' }}</p>
+      <ion-button fill="solid" (click)="addNotification()">
+        <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+        Add Notification
+      </ion-button>
+    </div>
+
+    <!-- Notifications Table - Desktop View -->
+    <div *ngIf="!isLoading && filteredNotifications.length > 0" class="table-wrapper d-none d-md-block">
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" style="width: 50px;">
+                  <ion-checkbox
+                    [checked]="selectAll"
+                    (ionChange)="toggleSelectAll()">
+                  </ion-checkbox>
+                </th>
+                <th scope="col">Type</th>
+                <th scope="col">Title</th>
+                <th scope="col">Message</th>
+                <th scope="col">Status</th>
+                <th scope="col">Sent To</th>
+                <th scope="col">Created</th>
+                <th scope="col" style="width: 200px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let notification of filteredNotifications">
+                <td>
+                  <ion-checkbox
+                    [checked]="selectedNotifications.includes(notification._id || '')"
+                    (ionChange)="toggleNotificationSelection(notification._id || '')">
+                  </ion-checkbox>
+                </td>
+                <td>
+                  <ion-badge [color]="getTypeBadgeColor(notification.type)">
+                    {{ notification.type }}
+                  </ion-badge>
+                </td>
+                <td>
+                  <strong class="notification-title" (click)="viewNotificationDetails(notification)">
+                    {{ notification.title }}
+                  </strong>
+                </td>
+                <td>
+                  <div class="message-preview">
+                    {{ notification.message.length > 60 ? (notification.message.substring(0, 60) + '...') : notification.message }}
+                  </div>
+                </td>
+                <td>
+                  <ion-badge [color]="notification.status === 'SENT' ? 'success' : 'medium'">
+                    {{ notification.status }}
+                  </ion-badge>
+                </td>
+                <td>
+                  <span *ngIf="notification.sentCount" class="sent-count">
+                    {{ notification.sentCount }} user(s)
+                  </span>
+                  <span *ngIf="!notification.sentCount" class="text-muted">-</span>
+                </td>
+                <td>
+                  <div class="date-time">{{ formatDate(notification.createdAt) }}</div>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <ion-button fill="clear" size="small" (click)="viewNotificationDetails(notification)" title="View Details">
+                      <ion-icon slot="icon-only" name="eye-outline"></ion-icon>
+                    </ion-button>
+                    <ion-button fill="clear" size="small" (click)="editNotification(notification)" title="Edit">
+                      <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                    </ion-button>
+                    <ion-button 
+                      *ngIf="notification.status === 'DRAFT'"
+                      fill="clear" 
+                      size="small" 
+                      color="success"
+                      (click)="sendNotification(notification)"
+                      title="Send">
+                      <ion-icon slot="icon-only" name="send-outline"></ion-icon>
+                    </ion-button>
+                    <ion-button fill="clear" size="small" color="danger" (click)="deleteNotification(notification)" title="Delete">
+                      <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                    </ion-button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications Cards - Mobile View -->
+    <div *ngIf="!isLoading && filteredNotifications.length > 0" class="notifications-cards d-md-none">
+      <div *ngFor="let notification of filteredNotifications" class="notification-card">
+        <div class="card-header">
+          <ion-checkbox
+            [checked]="selectedNotifications.includes(notification._id || '')"
+            (ionChange)="toggleNotificationSelection(notification._id || '')">
+          </ion-checkbox>
+          <ion-badge [color]="getTypeBadgeColor(notification.type)" class="type-badge">
+            {{ notification.type }}
+          </ion-badge>
+          <ion-badge [color]="notification.status === 'SENT' ? 'success' : 'medium'" class="status-badge">
+            {{ notification.status }}
+          </ion-badge>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title" (click)="viewNotificationDetails(notification)">
+            {{ notification.title }}
+          </h3>
+          <p class="card-message">{{ notification.message }}</p>
+          <div class="card-meta">
+            <div class="meta-item">
+              <ion-icon name="time-outline"></ion-icon>
+              <span>{{ formatDate(notification.createdAt) }}</span>
+            </div>
+            <div class="meta-item" *ngIf="notification.sentCount">
+              <ion-icon name="people-outline"></ion-icon>
+              <span>{{ notification.sentCount }} user(s)</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-actions">
+          <ion-button fill="clear" size="small" (click)="viewNotificationDetails(notification)">
+            <ion-icon slot="start" name="eye-outline"></ion-icon>
+            View
+          </ion-button>
+          <ion-button fill="clear" size="small" (click)="editNotification(notification)">
+            <ion-icon slot="start" name="create-outline"></ion-icon>
+            Edit
+          </ion-button>
+          <ion-button 
+            *ngIf="notification.status === 'DRAFT'"
+            fill="clear" 
+            size="small" 
+            color="success"
+            (click)="sendNotification(notification)">
+            <ion-icon slot="start" name="send-outline"></ion-icon>
+            Send
+          </ion-button>
+          <ion-button fill="clear" size="small" color="danger" (click)="deleteNotification(notification)">
+            <ion-icon slot="start" name="trash-outline"></ion-icon>
+            Delete
+          </ion-button>
+        </div>
+      </div>
+    </div>
+  </div>
 </ion-content>

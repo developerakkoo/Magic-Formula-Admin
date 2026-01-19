@@ -2,6 +2,7 @@ import { Component, inject, OnInit, OnDestroy, AfterViewInit, ViewChild, Element
 import { ActivatedRoute } from '@angular/router';
 import { LoadingController, MenuController, ToastController } from '@ionic/angular';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import { AnalyticsService, PlanWiseEarning, UserAnalytics, EarningsAnalytics, BestsellerPlan } from '../services/analytics.service';
 
 Chart.register(...registerables);
 
@@ -29,6 +30,12 @@ export class FolderPage implements OnInit, AfterViewInit, OnDestroy {
   selectedDateRange: string = '30';
   isLoading: boolean = false;
   
+  // Dashboard analytics properties
+  userAnalytics: UserAnalytics | null = null;
+  earningsAnalytics: EarningsAnalytics | null = null;
+  bestsellerPlan: BestsellerPlan | null = null;
+  isLoadingAnalytics: boolean = false;
+  
   barChart: Chart | null = null;
   doughnutChart: Chart | null = null;
   
@@ -43,11 +50,13 @@ export class FolderPage implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private menuController: MenuController,
     private loadingController: LoadingController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private analyticsService: AnalyticsService
   ) {}
 
   ngOnInit() {
     this.folder = this.activatedRoute.snapshot.paramMap.get('id') as string;
+    this.loadDashboardAnalytics();
     this.loadSubscriptionData();
   }
 
@@ -68,32 +77,79 @@ export class FolderPage implements OnInit, AfterViewInit, OnDestroy {
     this.menuController.enable(true);
   }
 
-  loadSubscriptionData() {
+  async loadDashboardAnalytics() {
+    this.isLoadingAnalytics = true;
+    
+    try {
+      // Fetch all analytics data in parallel
+      const [userData, earningsData, bestsellerData] = await Promise.all([
+        this.analyticsService.getUserAnalytics().toPromise(),
+        this.analyticsService.getEarningsAnalytics().toPromise(),
+        this.analyticsService.getBestsellerPlans().toPromise()
+      ]);
+      
+      // Assign data
+      if (userData) {
+        this.userAnalytics = userData;
+      }
+      
+      if (earningsData) {
+        this.earningsAnalytics = earningsData;
+      }
+      
+      if (bestsellerData && bestsellerData.bestsellerPlan) {
+        this.bestsellerPlan = bestsellerData.bestsellerPlan;
+      }
+      
+      this.isLoadingAnalytics = false;
+    } catch (error: any) {
+      this.isLoadingAnalytics = false;
+      const errorMessage = error?.message || 'Failed to load dashboard analytics. Please try again.';
+      this.presentToast(errorMessage, 'danger');
+      console.error('Error loading dashboard analytics:', error);
+      
+      // Set default values on error
+      this.userAnalytics = {
+        totalUsers: 0,
+        liveUsers: 0,
+        subscribedUsers: 0,
+        blockedUsers: 0,
+        unsubscribedUsers: 0
+      };
+      this.earningsAnalytics = {
+        todayEarnings: 0,
+        monthlyEarnings: 0,
+        totalEarnings: 0,
+        planWiseEarnings: []
+      };
+      this.bestsellerPlan = null;
+    }
+  }
+
+  async loadSubscriptionData() {
     this.isLoading = true;
-    // Mock API data
-    setTimeout(() => {
-      this.subscriptionData = [
-        {
-          plan: '1 Month',
-          purchases: 120,
-          revenue: 24000
-        },
-        {
-          plan: '3 Months',
-          purchases: 280,
-          revenue: 126000
-        },
-        {
-          plan: '6 Months',
-          purchases: 180,
-          revenue: 162000
-        },
-        {
-          plan: '12 Months',
-          purchases: 90,
-          revenue: 216000
-        }
-      ];
+    
+    try {
+      const dateRange = this.getDateRange(this.selectedDateRange);
+      
+      // Fetch bestseller plans data
+      const bestsellerData = await this.analyticsService.getBestsellerPlans(
+        dateRange.startDate,
+        dateRange.endDate
+      ).toPromise();
+      
+      // Fetch earnings data for revenue
+      const earningsData = await this.analyticsService.getEarningsAnalytics(
+        dateRange.startDate,
+        dateRange.endDate
+      ).toPromise();
+      
+      // Map backend data to frontend format
+      this.subscriptionData = this.mapBestsellerToSubscriptionPlan(
+        bestsellerData?.topPlans || [],
+        earningsData?.planWiseEarnings || []
+      );
+      
       this.onDateRangeChange(this.selectedDateRange);
       this.calculateInsights();
       this.isLoading = false;
@@ -102,24 +158,158 @@ export class FolderPage implements OnInit, AfterViewInit, OnDestroy {
       setTimeout(() => {
         this.initializeCharts();
       }, 300);
-    }, 500);
+    } catch (error: any) {
+      this.isLoading = false;
+      const errorMessage = error?.message || 'Failed to load analytics data. Please try again.';
+      this.presentToast(errorMessage, 'danger');
+      console.error('Error loading subscription data:', error);
+      
+      // Use empty data on error
+      this.subscriptionData = [];
+      this.filteredData = [];
+    }
+  }
+  
+  /**
+   * Map bestseller plans and earnings data to SubscriptionPlan format
+   */
+  private mapBestsellerToSubscriptionPlan(
+    bestsellerPlans: any[],
+    planWiseEarnings: PlanWiseEarning[]
+  ): SubscriptionPlan[] {
+    // Create a map of plan earnings by plan ID
+    const earningsMap = new Map<string, PlanWiseEarning>();
+    planWiseEarnings.forEach(earning => {
+      earningsMap.set(earning._id.toString(), earning);
+    });
+    
+    // Map bestseller plans to SubscriptionPlan format
+    return bestsellerPlans.map(plan => {
+      const earning = earningsMap.get(plan._id.toString());
+      const durationLabel = this.getDurationLabel(plan.durationInMonths);
+      
+      return {
+        plan: durationLabel,
+        purchases: plan.purchaseCount || 0,
+        revenue: earning?.totalAmount || (plan.price * plan.purchaseCount) || 0
+      };
+    });
+  }
+  
+  /**
+   * Get duration label from months
+   */
+  private getDurationLabel(months: number): string {
+    switch (months) {
+      case 1:
+        return '1 Month';
+      case 3:
+        return '3 Months';
+      case 6:
+        return '6 Months';
+      case 12:
+        return '12 Months';
+      default:
+        return `${months} Month${months > 1 ? 's' : ''}`;
+    }
+  }
+  
+  /**
+   * Get date range based on selected range
+   */
+  private getDateRange(range: string): { startDate?: string; endDate?: string } {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    const endDate = today.toISOString().split('T')[0];
+    
+    let startDate: Date;
+    
+    switch (range) {
+      case 'today':
+        startDate = new Date(today);
+        startDate.setHours(0, 0, 0, 0);
+        return {
+          startDate: startDate.toISOString().split('T')[0],
+          endDate
+        };
+      case '7':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        return {
+          startDate: startDate.toISOString().split('T')[0],
+          endDate
+        };
+      case '30':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 30);
+        startDate.setHours(0, 0, 0, 0);
+        return {
+          startDate: startDate.toISOString().split('T')[0],
+          endDate
+        };
+      default:
+        return {};
+    }
+  }
+  
+  /**
+   * Present toast notification
+   */
+  async presentToast(message: string, color: string) {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      color,
+      position: 'top'
+    });
+    toast.present();
   }
 
-  onDateRangeChange(range: string) {
+  async onDateRangeChange(range: string) {
     this.selectedDateRange = range;
     this.isLoading = true;
     
-    // Simulate filtering based on date range
-    setTimeout(() => {
-      // For demo, we'll use the same data but could filter here
+    try {
+      const dateRange = this.getDateRange(range);
+      
+      // Fetch bestseller plans data with date filter
+      const bestsellerData = await this.analyticsService.getBestsellerPlans(
+        dateRange.startDate,
+        dateRange.endDate
+      ).toPromise();
+      
+      // Fetch earnings data for revenue
+      const earningsData = await this.analyticsService.getEarningsAnalytics(
+        dateRange.startDate,
+        dateRange.endDate
+      ).toPromise();
+      
+      // Map backend data to frontend format
+      this.subscriptionData = this.mapBestsellerToSubscriptionPlan(
+        bestsellerData?.topPlans || [],
+        earningsData?.planWiseEarnings || []
+      );
+      
       this.filteredData = [...this.subscriptionData];
       this.calculateInsights();
       
       if (this.barChart && this.doughnutChart) {
         this.updateCharts();
+      } else if (this.filteredData.length > 0) {
+        // Initialize charts if they don't exist yet
+        setTimeout(() => {
+          this.initializeCharts();
+        }, 100);
       }
+      
       this.isLoading = false;
-    }, 300);
+    } catch (error: any) {
+      this.isLoading = false;
+      const errorMessage = error?.message || 'Failed to load analytics data. Please try again.';
+      this.presentToast(errorMessage, 'danger');
+      console.error('Error loading analytics data:', error);
+    }
   }
 
   initializeCharts() {
@@ -340,10 +530,55 @@ export class FolderPage implements OnInit, AfterViewInit, OnDestroy {
     return bestSeller.plan;
   }
 
-  onCustomDateChange(event: any) {
+  async onCustomDateChange(event: any) {
     this.showCustomDatePicker = false;
-    // For now, just apply 30 days filter
-    // In production, this would filter based on selected date range
-    this.onDateRangeChange('30');
+    const selectedDate = event.detail.value;
+    
+    if (selectedDate) {
+      const date = new Date(selectedDate);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      
+      const startDate = date.toISOString().split('T')[0];
+      const endDate = today.toISOString().split('T')[0];
+      
+      this.isLoading = true;
+      
+      try {
+        // Fetch data with custom date range
+        const bestsellerData = await this.analyticsService.getBestsellerPlans(
+          startDate,
+          endDate
+        ).toPromise();
+        
+        const earningsData = await this.analyticsService.getEarningsAnalytics(
+          startDate,
+          endDate
+        ).toPromise();
+        
+        this.subscriptionData = this.mapBestsellerToSubscriptionPlan(
+          bestsellerData?.topPlans || [],
+          earningsData?.planWiseEarnings || []
+        );
+        
+        this.filteredData = [...this.subscriptionData];
+        this.calculateInsights();
+        
+        if (this.barChart && this.doughnutChart) {
+          this.updateCharts();
+        } else if (this.filteredData.length > 0) {
+          setTimeout(() => {
+            this.initializeCharts();
+          }, 100);
+        }
+        
+        this.isLoading = false;
+      } catch (error: any) {
+        this.isLoading = false;
+        const errorMessage = error?.message || 'Failed to load analytics data. Please try again.';
+        this.presentToast(errorMessage, 'danger');
+        console.error('Error loading custom date analytics:', error);
+      }
+    }
   }
 }

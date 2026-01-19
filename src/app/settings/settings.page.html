@@ -1,13 +1,165 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
-    <ion-title>settings</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Settings</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">settings</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="settings-page">
+  <div class="settings-container">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div>
+        <p class="eyebrow">Configuration</p>
+        <h1>System Settings</h1>
+        <p class="sub">Manage application settings and preferences</p>
+      </div>
+      <div class="header-actions">
+        <ion-button 
+          fill="outline" 
+          size="small" 
+          color="warning"
+          (click)="resetSettings()"
+          [disabled]="isLoading || isSaving">
+          <ion-icon slot="start" name="refresh-outline"></ion-icon>
+          Reset to Defaults
+        </ion-button>
+        <ion-button 
+          fill="solid" 
+          size="small"
+          (click)="saveSettings()"
+          [disabled]="isLoading || isSaving || settingsForm.invalid">
+          <ion-icon slot="start" name="save-outline"></ion-icon>
+          Save Settings
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <ion-spinner></ion-spinner>
+      <p>Loading settings...</p>
+    </div>
+
+    <!-- Settings Form -->
+    <form [formGroup]="settingsForm" *ngIf="!isLoading" class="settings-form">
+      <!-- General Settings -->
+      <div class="settings-section">
+        <h2 class="section-title">General Settings</h2>
+        
+        <ion-item class="form-item">
+          <ion-label position="stacked">App Name <span class="required">*</span></ion-label>
+          <ion-input
+            formControlName="appName"
+            placeholder="Enter app name"
+            fill="outline">
+          </ion-input>
+        </ion-item>
+
+        <ion-item class="form-item">
+          <ion-label position="stacked">App Description</ion-label>
+          <ion-textarea
+            formControlName="appDescription"
+            placeholder="Enter app description"
+            rows="3"
+            fill="outline">
+          </ion-textarea>
+        </ion-item>
+      </div>
+
+      <!-- Notification Settings -->
+      <div class="settings-section">
+        <h2 class="section-title">Notification Settings</h2>
+        
+        <ion-item class="form-item">
+          <ion-label position="stacked">Default Notification Title <span class="required">*</span></ion-label>
+          <ion-input
+            formControlName="defaultNotificationTitle"
+            placeholder="Enter default title"
+            fill="outline">
+          </ion-input>
+        </ion-item>
+
+        <ion-item class="form-item">
+          <ion-label position="stacked">Default Notification Message <span class="required">*</span></ion-label>
+          <ion-textarea
+            formControlName="defaultNotificationMessage"
+            placeholder="Enter default message"
+            rows="3"
+            fill="outline">
+          </ion-textarea>
+        </ion-item>
+
+        <ion-item class="form-item">
+          <ion-label>Enable WhatsApp Notifications</ion-label>
+          <ion-toggle formControlName="enableWhatsAppNotifications"></ion-toggle>
+        </ion-item>
+
+        <ion-item class="form-item">
+          <ion-label>Enable Firebase Notifications</ion-label>
+          <ion-toggle formControlName="enableFirebaseNotifications"></ion-toggle>
+        </ion-item>
+      </div>
+
+      <!-- Payment Settings -->
+      <div class="settings-section">
+        <h2 class="section-title">Payment Settings</h2>
+        
+        <ion-item class="form-item">
+          <ion-label position="stacked">Razorpay Key ID</ion-label>
+          <ion-input
+            formControlName="razorpayKeyId"
+            placeholder="Enter Razorpay Key ID"
+            fill="outline"
+            type="text">
+          </ion-input>
+        </ion-item>
+
+        <ion-item class="form-item">
+          <ion-label position="stacked">Razorpay Key Secret</ion-label>
+          <ion-input
+            formControlName="razorpayKeySecret"
+            placeholder="Enter new secret (leave empty to keep current)"
+            fill="outline"
+            type="password">
+          </ion-input>
+          <ion-note slot="helper">Leave empty to keep current secret unchanged</ion-note>
+        </ion-item>
+      </div>
+
+      <!-- System Settings -->
+      <div class="settings-section">
+        <h2 class="section-title">System Settings</h2>
+        
+        <ion-item class="form-item">
+          <ion-label>Maintenance Mode</ion-label>
+          <ion-toggle formControlName="maintenanceMode"></ion-toggle>
+        </ion-item>
+
+        <ion-item class="form-item" *ngIf="settingsForm.get('maintenanceMode')?.value">
+          <ion-label position="stacked">Maintenance Message</ion-label>
+          <ion-textarea
+            formControlName="maintenanceMessage"
+            placeholder="Enter maintenance message"
+            rows="3"
+            fill="outline">
+          </ion-textarea>
+        </ion-item>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <ion-button 
+          expand="block"
+          fill="solid"
+          (click)="saveSettings()"
+          [disabled]="isSaving || settingsForm.invalid">
+          <ion-icon slot="start" name="save-outline"></ion-icon>
+          {{ isSaving ? 'Saving...' : 'Save Settings' }}
+        </ion-button>
+      </div>
+    </form>
+  </div>
 </ion-content>

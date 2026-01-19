@@ -1,0 +1,291 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ isCreatingNotification ? 'Create Notification' : 'Select Users' }}</ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="cancel()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button (click)="showFilters = !showFilters">
+        <ion-icon [name]="showFilters ? 'filter' : 'filter-outline'"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="user-selection-container">
+    <!-- Notification Form Section (shown when creating) -->
+    <div *ngIf="isCreatingNotification" class="notification-form-section">
+      <div class="form-container">
+        <h3 class="form-title">Create Notification</h3>
+        <form [formGroup]="notificationForm">
+          <!-- Title Field -->
+          <div class="form-field">
+            <label class="form-label">
+              Title <span class="required">*</span>
+            </label>
+            <ion-input
+              formControlName="title"
+              placeholder="Enter notification title"
+              fill="outline"
+              [class.invalid]="notificationForm.get('title')?.invalid && notificationForm.get('title')?.touched">
+            </ion-input>
+            <div *ngIf="notificationForm.get('title')?.invalid && notificationForm.get('title')?.touched" class="error-message">
+              Title is required (max 200 characters)
+            </div>
+          </div>
+
+          <!-- Message Field -->
+          <div class="form-field">
+            <label class="form-label">
+              Message <span class="required">*</span>
+            </label>
+            <ion-textarea
+              formControlName="message"
+              placeholder="Enter notification message"
+              rows="4"
+              fill="outline"
+              [class.invalid]="notificationForm.get('message')?.invalid && notificationForm.get('message')?.touched">
+            </ion-textarea>
+            <div *ngIf="notificationForm.get('message')?.invalid && notificationForm.get('message')?.touched" class="error-message">
+              Message is required (max 1000 characters)
+            </div>
+          </div>
+
+          <!-- Type Field -->
+          <div class="form-field">
+            <label class="form-label">
+              Type <span class="required">*</span>
+            </label>
+            <ion-select
+              formControlName="type"
+              placeholder="Select type"
+              fill="outline">
+              <ion-select-option value="INFO">Info</ion-select-option>
+              <ion-select-option value="PROMOTION">Promotion</ion-select-option>
+              <ion-select-option value="ALERT">Alert</ion-select-option>
+            </ion-select>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Selection Summary Bar -->
+    <div class="selection-summary-bar">
+      <div class="summary-info">
+        <ion-text color="primary">
+          <strong>{{ getSelectedCount() }}</strong> user{{ getSelectedCount() !== 1 ? 's' : '' }} selected
+        </ion-text>
+        <span class="total-users">of {{ totalCount }} total</span>
+      </div>
+      <div class="summary-actions">
+        <ion-button fill="outline" size="small" (click)="selectAllFiltered()">
+          <ion-icon slot="start" name="checkmark-done-outline"></ion-icon>
+          Select Filtered
+        </ion-button>
+        <ion-button fill="outline" size="small" color="medium" (click)="clearAll()">
+          <ion-icon slot="start" name="close-outline"></ion-icon>
+          Clear All
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="filters-panel">
+      <div class="row g-3 align-items-end">
+        <!-- Search Input -->
+        <div class="col-12 col-md-4 col-lg-3">
+          <label class="filter-label">Search</label>
+          <ion-input
+            [(ngModel)]="searchQuery"
+            (ionInput)="onSearch()"
+            placeholder="Name, email, or mobile"
+            fill="outline"
+            clearable="true">
+            <ion-icon slot="start" name="search-outline"></ion-icon>
+          </ion-input>
+        </div>
+
+        <!-- Blocked Status Filter -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Blocked Status</label>
+          <ion-select
+            [(ngModel)]="filters.isBlocked"
+            (ionChange)="onFilterChange()"
+            placeholder="All Users"
+            interface="popover"
+            fill="outline"
+            [ngModelOptions]="{standalone: true}">
+            <ion-select-option [value]="undefined">All Users</ion-select-option>
+            <ion-select-option [value]="true">Blocked Only</ion-select-option>
+            <ion-select-option [value]="false">Unblocked Only</ion-select-option>
+          </ion-select>
+        </div>
+
+        <!-- Subscription Status Filter -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Subscription</label>
+          <ion-select
+            [(ngModel)]="filters.hasActivePlan"
+            (ionChange)="onFilterChange()"
+            placeholder="All Users"
+            interface="popover"
+            fill="outline"
+            [ngModelOptions]="{standalone: true}">
+            <ion-select-option [value]="undefined">All Users</ion-select-option>
+            <ion-select-option [value]="true">Has Active Plan</ion-select-option>
+            <ion-select-option [value]="false">No Active Plan</ion-select-option>
+          </ion-select>
+        </div>
+
+        <!-- Plan Expiry From -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Plan Expiry From</label>
+          <ion-input
+            [value]="formatDate(filters.planExpiryStart)"
+            (click)="openDatePicker('start')"
+            placeholder="Select start date"
+            fill="outline"
+            readonly="true">
+            <ion-icon slot="start" name="calendar-outline"></ion-icon>
+          </ion-input>
+        </div>
+
+        <!-- Plan Expiry To -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Plan Expiry To</label>
+          <ion-input
+            [value]="formatDate(filters.planExpiryEnd)"
+            (click)="openDatePicker('end')"
+            placeholder="Select end date"
+            fill="outline"
+            readonly="true">
+            <ion-icon slot="start" name="calendar-outline"></ion-icon>
+          </ion-input>
+        </div>
+
+        <!-- Sort Field -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Sort By</label>
+          <ion-select
+            [(ngModel)]="filters.sortBy"
+            (ionChange)="onFilterChange()"
+            placeholder="Date"
+            interface="popover"
+            fill="outline"
+            [ngModelOptions]="{standalone: true}">
+            <ion-select-option value="createdAt">Created Date</ion-select-option>
+            <ion-select-option value="fullName">Full Name</ion-select-option>
+            <ion-select-option value="email">Email Address</ion-select-option>
+            <ion-select-option value="planExpiry">Plan Expiry</ion-select-option>
+          </ion-select>
+        </div>
+
+        <!-- Sort Direction -->
+        <div class="col-12 col-md-2 col-lg-2">
+          <label class="filter-label">Order</label>
+          <ion-button
+            expand="block"
+            fill="outline"
+            size="default"
+            (click)="toggleSortOrder()"
+            class="sort-direction-btn">
+            <ion-icon [name]="filters.order === 'asc' ? 'arrow-up-outline' : 'arrow-down-outline'"></ion-icon>
+            <span class="ms-2">{{ filters.order === 'asc' ? 'ASC' : 'DESC' }}</span>
+          </ion-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users List -->
+    <div class="users-list-container">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-state">
+        <ion-spinner></ion-spinner>
+        <p>Loading users...</p>
+      </div>
+
+      <!-- Users List -->
+      <div *ngIf="!isLoading" class="users-list">
+        <div
+          *ngFor="let user of users"
+          class="user-item"
+          [class.selected]="isUserSelected(user._id)"
+          (click)="toggleUserSelection(user)">
+          <ion-checkbox [checked]="isUserSelected(user._id)"></ion-checkbox>
+          <div class="user-info">
+            <div class="user-name">{{ user.fullName || 'No Name' }}</div>
+            <div class="user-details">
+              <span *ngIf="user.email">{{ user.email }}</span>
+              <span *ngIf="user.email && user.mobile"> • </span>
+              <span *ngIf="user.mobile">{{ user.mobile }}</span>
+            </div>
+          </div>
+          <div class="user-badges">
+            <ion-badge *ngIf="user.isBlocked" color="danger">Blocked</ion-badge>
+            <ion-badge *ngIf="user.hasActivePlan" color="success">Subscribed</ion-badge>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && users.length === 0" class="empty-state">
+        <ion-icon name="people-outline"></ion-icon>
+        <p>No users found</p>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="!isLoading && totalPages > 1" class="pagination">
+        <ion-button
+          fill="clear"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)">
+          <ion-icon slot="start" name="chevron-back-outline"></ion-icon>
+          Previous
+        </ion-button>
+        <span class="page-info">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+        <ion-button
+          fill="clear"
+          [disabled]="currentPage === totalPages"
+          (click)="onPageChange(currentPage + 1)">
+          Next
+          <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button fill="clear" (click)="cancel()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title slot="center">
+      {{ getSelectedCount() }} selected
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        *ngIf="!isCreatingNotification"
+        fill="solid"
+        (click)="confirmSelection()"
+        [disabled]="getSelectedCount() === 0">
+        Confirm ({{ getSelectedCount() }})
+      </ion-button>
+      <ion-button
+        *ngIf="isCreatingNotification"
+        fill="solid"
+        (click)="createAndSendNotification()"
+        [disabled]="notificationForm?.invalid || getSelectedCount() === 0 || isSending">
+        <ion-spinner *ngIf="isSending" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!isSending" name="send-outline" slot="start"></ion-icon>
+        {{ isSending ? 'Sending...' : 'Create & Send Notification' }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>
+

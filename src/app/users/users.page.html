@@ -1,13 +1,362 @@
 <ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
     <ion-title>User Management</ion-title>
-    <ion-button slot="end" (click)="addUser()">
-      <ion-icon slot="start" name="person-add"></ion-icon>
-      Add User
-    </ion-button>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
- 
+<ion-content [fullscreen]="true" class="users-page">
+  <div class="users-container">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div>
+        <p class="eyebrow">Administration</p>
+        <h1>User Management</h1>
+        <p class="sub">Manage users, subscriptions, and account access</p>
+      </div>
+      <div class="header-actions">
+        <ion-button fill="outline" size="small" (click)="exportUsers()">
+          <ion-icon slot="start" name="download-outline"></ion-icon>
+          Export
+        </ion-button>
+        <ion-button fill="outline" size="small" (click)="openBulkUpload('users')">
+          <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
+          Bulk Create
+        </ion-button>
+        <ion-button fill="outline" size="small" (click)="openBulkUpload('subscriptions')">
+          <ion-icon slot="start" name="document-outline"></ion-icon>
+          Bulk Subscriptions
+        </ion-button>
+        <ion-button fill="solid" size="small" (click)="addUser()">
+          <ion-icon slot="start" name="person-add-outline"></ion-icon>
+          Add User
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="filters-panel">
+      <div class="row g-3 align-items-end">
+        <!-- Search Input -->
+        <div class="col-12 col-md-4 col-lg-3">
+          <label class="filter-label">Search</label>
+          <ion-input
+            [(ngModel)]="searchQuery"
+            (ionInput)="onSearch()"
+            placeholder="Name, email, or mobile"
+            fill="outline"
+            clearable="true">
+            <ion-icon slot="start" name="search-outline"></ion-icon>
+          </ion-input>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Status</label>
+          <ion-select
+            [(ngModel)]="filterStatus"
+            (ionChange)="onFilterChange()"
+            placeholder="All Users"
+            interface="popover"
+            fill="outline">
+            <ion-select-option value="all">All Users</ion-select-option>
+            <ion-select-option value="live">Live Users</ion-select-option>
+            <ion-select-option value="subscribed">Subscribed</ion-select-option>
+            <ion-select-option value="unsubscribed">Unsubscribed</ion-select-option>
+          </ion-select>
+        </div>
+
+        <!-- Sort Field -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Sort By</label>
+          <ion-select
+            [(ngModel)]="sortField"
+            (ionChange)="onSort(sortField)"
+            placeholder="Date"
+            interface="popover"
+            fill="outline">
+            <ion-select-option value="createdAt">Date</ion-select-option>
+            <ion-select-option value="name">Name</ion-select-option>
+            <ion-select-option value="email">Email</ion-select-option>
+            <ion-select-option value="status">Status</ion-select-option>
+          </ion-select>
+        </div>
+
+        <!-- Sort Direction -->
+        <div class="col-12 col-md-2 col-lg-2">
+          <label class="filter-label">Order</label>
+          <ion-button
+            expand="block"
+            fill="outline"
+            size="default"
+            (click)="onSort(sortField)"
+            class="sort-direction-btn">
+            <ion-icon [name]="sortDirection === 'asc' ? 'arrow-up-outline' : 'arrow-down-outline'"></ion-icon>
+            <span class="ms-2">{{ sortDirection === 'asc' ? 'ASC' : 'DESC' }}</span>
+          </ion-button>
+        </div>
+
+        <!-- Device Conflicts Toggle -->
+        <div class="col-12 col-md-4 col-lg-3">
+          <label class="filter-label">Quick Filters</label>
+          <ion-button
+            expand="block"
+            fill="outline"
+            size="default"
+            [color]="showDeviceConflicts ? 'primary' : 'medium'"
+            (click)="toggleDeviceConflicts()"
+            class="device-conflicts-btn">
+            <ion-icon slot="start" name="phone-portrait-outline"></ion-icon>
+            <span>Device Conflicts</span>
+          </ion-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk Actions Bar -->
+    <div class="bulk-actions" *ngIf="selectedUsers.length > 0">
+      <div class="bulk-info">
+        <span>{{ selectedUsers.length }} user(s) selected</span>
+      </div>
+      <div class="bulk-buttons">
+        <ion-button fill="outline" size="small" color="success" (click)="bulkUnblockUsers()">
+          <ion-icon slot="start" name="checkmark-circle-outline"></ion-icon>
+          Unblock
+        </ion-button>
+        <ion-button fill="outline" size="small" color="warning" (click)="bulkBlockUsers()">
+          <ion-icon slot="start" name="ban-outline"></ion-icon>
+          Block
+        </ion-button>
+        <ion-button fill="outline" size="small" color="danger" (click)="bulkDeleteUsers()">
+          <ion-icon slot="start" name="trash-outline"></ion-icon>
+          Delete
+        </ion-button>
+        <ion-button fill="clear" size="small" (click)="clearSelection()">
+          Clear
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <ion-skeleton-text animated style="width: 100%; height: 60px; margin-bottom: 12px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 100%; height: 60px; margin-bottom: 12px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 100%; height: 60px;"></ion-skeleton-text>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredUsers.length === 0" class="empty-state">
+      <ion-icon name="people-outline"></ion-icon>
+      <h3>No users found</h3>
+      <p>{{ searchQuery ? 'Try adjusting your search criteria' : 'Get started by adding a new user' }}</p>
+      <ion-button fill="outline" (click)="addUser()">
+        <ion-icon slot="start" name="person-add-outline"></ion-icon>
+        Add User
+      </ion-button>
+    </div>
+
+    <!-- Users Table - Desktop View -->
+    <div *ngIf="!isLoading && filteredUsers.length > 0" class="table-wrapper d-none d-md-block">
+      <div class="table-container">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" style="width: 50px;">
+                <ion-checkbox
+                  [checked]="selectedUsers.length === filteredUsers.length && filteredUsers.length > 0"
+                  (ionChange)="selectAll()">
+                </ion-checkbox>
+              </th>
+              <th scope="col">Name</th>
+              <th scope="col">Email</th>
+              <th scope="col">Mobile</th>
+              <th scope="col">WhatsApp</th>
+              <th scope="col">Status</th>
+              <th scope="col">Subscription</th>
+              <th scope="col">Last Login</th>
+              <th scope="col" style="width: 180px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of filteredUsers">
+              <td>
+                <ion-checkbox
+                  [checked]="isSelected(user._id!)"
+                  (ionChange)="toggleUserSelection(user._id!)">
+                </ion-checkbox>
+              </td>
+              <td>
+                <div class="user-info">
+                  <div class="avatar" *ngIf="user.profilePic">
+                    <img [src]="user.profilePic" [alt]="user.fullName">
+                  </div>
+                  <div class="avatar-placeholder" *ngIf="!user.profilePic">
+                    <ion-icon name="person-outline"></ion-icon>
+                  </div>
+                  <div class="user-details">
+                    <strong>{{ user.fullName || 'N/A' }}</strong>
+                  </div>
+                </div>
+              </td>
+              <td>{{ user.email || 'N/A' }}</td>
+              <td>{{ user.mobile || 'N/A' }}</td>
+              <td>{{ user.whatsapp || 'N/A' }}</td>
+              <td>
+                <ion-badge [color]="getStatusBadge(user).color">
+                  {{ getStatusBadge(user).text }}
+                </ion-badge>
+              </td>
+              <td>
+                <span *ngIf="isPlanActive(user)">
+                  Active until {{ user.planExpiry | date:'shortDate' }}
+                </span>
+                <span *ngIf="!isPlanActive(user)" class="no-subscription">
+                  No subscription
+                </span>
+              </td>
+              <td>
+                {{ user.lastDeviceLogin ? (user.lastDeviceLogin | date:'short') : 'Never' }}
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  <ion-button fill="clear" size="small" (click)="viewUserDetails(user)">
+                    <ion-icon name="eye-outline"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" (click)="editUser(user)">
+                    <ion-icon name="create-outline"></ion-icon>
+                  </ion-button>
+                  <ion-button
+                    fill="clear"
+                    size="small"
+                    [color]="user.isBlocked ? 'success' : 'warning'"
+                    (click)="user.isBlocked ? unblockUser(user) : blockUser(user)">
+                    <ion-icon [name]="user.isBlocked ? 'checkmark-circle-outline' : 'ban-outline'"></ion-icon>
+                  </ion-button>
+                  <ion-button fill="clear" size="small" color="danger" (click)="deleteUser(user)">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </ion-button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Cards - Mobile View -->
+    <div *ngIf="!isLoading && filteredUsers.length > 0" class="d-md-none">
+      <div class="row g-3">
+        <div class="col-12" *ngFor="let user of filteredUsers">
+          <div class="card user-card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center gap-2">
+                  <ion-checkbox
+                    [checked]="isSelected(user._id!)"
+                    (ionChange)="toggleUserSelection(user._id!)">
+                  </ion-checkbox>
+                  <div class="user-info">
+                    <div class="avatar" *ngIf="user.profilePic">
+                      <img [src]="user.profilePic" [alt]="user.fullName">
+                    </div>
+                    <div class="avatar-placeholder" *ngIf="!user.profilePic">
+                      <ion-icon name="person-outline"></ion-icon>
+                    </div>
+                    <div class="user-details">
+                      <strong>{{ user.fullName || 'N/A' }}</strong>
+                    </div>
+                  </div>
+                </div>
+                <ion-badge [color]="getStatusBadge(user).color">
+                  {{ getStatusBadge(user).text }}
+                </ion-badge>
+              </div>
+              
+              <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <small class="text-muted d-block">Email</small>
+                  <div>{{ user.email || 'N/A' }}</div>
+                </div>
+                <div class="col-6">
+                  <small class="text-muted d-block">Mobile</small>
+                  <div>{{ user.mobile || 'N/A' }}</div>
+                </div>
+                <div class="col-6">
+                  <small class="text-muted d-block">WhatsApp</small>
+                  <div>{{ user.whatsapp || 'N/A' }}</div>
+                </div>
+                <div class="col-6">
+                  <small class="text-muted d-block">Last Login</small>
+                  <div>{{ user.lastDeviceLogin ? (user.lastDeviceLogin | date:'short') : 'Never' }}</div>
+                </div>
+                <div class="col-12">
+                  <small class="text-muted d-block">Subscription</small>
+                  <div>
+                    <span *ngIf="isPlanActive(user)">
+                      Active until {{ user.planExpiry | date:'shortDate' }}
+                    </span>
+                    <span *ngIf="!isPlanActive(user)" class="no-subscription">
+                      No subscription
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex gap-2 justify-content-end">
+                <ion-button fill="clear" size="small" (click)="viewUserDetails(user)">
+                  <ion-icon name="eye-outline"></ion-icon>
+                </ion-button>
+                <ion-button fill="clear" size="small" (click)="editUser(user)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </ion-button>
+                <ion-button
+                  fill="clear"
+                  size="small"
+                  [color]="user.isBlocked ? 'success' : 'warning'"
+                  (click)="user.isBlocked ? unblockUser(user) : blockUser(user)">
+                  <ion-icon [name]="user.isBlocked ? 'checkmark-circle-outline' : 'ban-outline'"></ion-icon>
+                </ion-button>
+                <ion-button fill="clear" size="small" color="danger" (click)="deleteUser(user)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Device Conflicts Section -->
+    <div *ngIf="showDeviceConflicts && deviceConflictUsers.length > 0" class="device-conflicts-section">
+      <div class="section-header">
+        <h2>Device Login Conflicts</h2>
+        <p>Users blocked for attempting to login from a new device</p>
+      </div>
+      <div class="conflicts-list">
+        <div class="conflict-card" *ngFor="let user of deviceConflictUsers">
+          <div class="conflict-info">
+            <h4>{{ user.fullName || user.email || user.mobile }}</h4>
+            <p>Device ID: {{ user.deviceId || 'Unknown' }}</p>
+            <p>Last Login: {{ user.lastDeviceLogin ? (user.lastDeviceLogin | date:'medium') : 'Never' }}</p>
+            <p>Login Attempts: {{ user.loginAttempts || 0 }}</p>
+          </div>
+          <div class="conflict-actions">
+            <ion-button fill="outline" size="small" color="success" (click)="allowNewDevice(user._id!)">
+              Allow New Device
+            </ion-button>
+            <ion-button fill="outline" size="small" color="warning" (click)="blockUser(user)">
+              Block User
+            </ion-button>
+            <ion-button fill="outline" size="small" (click)="viewUserDetails(user)">
+              View Details
+            </ion-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </ion-content>

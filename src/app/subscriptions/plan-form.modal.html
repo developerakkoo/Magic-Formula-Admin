@@ -1,0 +1,223 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ isEditMode ? 'Edit Subscription Plan' : 'Create Subscription Plan' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="plan-form-content">
+  <form [formGroup]="planForm" (ngSubmit)="onSubmit()">
+    <div class="form-container">
+      <!-- Basic Information -->
+      <div class="form-section">
+        <h3 class="section-title">Basic Information</h3>
+        
+        <!-- Title -->
+        <ion-item class="form-item">
+          <ion-label position="stacked">Title <span class="required">*</span></ion-label>
+          <ion-input
+            formControlName="title"
+            placeholder="Enter plan title"
+            [class.invalid]="planForm.get('title')?.invalid && planForm.get('title')?.touched">
+          </ion-input>
+        </ion-item>
+        <div *ngIf="planForm.get('title')?.invalid && planForm.get('title')?.touched" class="error-message">
+          Title is required
+        </div>
+
+        <!-- Duration -->
+        <ion-item class="form-item">
+          <ion-label position="stacked">Duration <span class="required">*</span></ion-label>
+          <ion-select formControlName="durationInMonths" placeholder="Select duration">
+            <ion-select-option [value]="1">1 Month</ion-select-option>
+            <ion-select-option [value]="3">3 Months</ion-select-option>
+            <ion-select-option [value]="6">6 Months</ion-select-option>
+            <ion-select-option [value]="12">12 Months</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <div *ngIf="planForm.get('durationInMonths')?.invalid && planForm.get('durationInMonths')?.touched" class="error-message">
+          Duration is required
+        </div>
+      </div>
+
+      <!-- Description Points -->
+      <div class="form-section">
+        <h3 class="section-title">
+          Description Points
+          <span class="subtitle">(Max 6 points)</span>
+        </h3>
+        
+        <div formArrayName="description" class="description-points">
+          <div
+            *ngFor="let point of descriptionArray.controls; let i = index"
+            class="description-point-item">
+            <ion-item class="form-item">
+              <ion-label position="stacked">Point {{ i + 1 }}</ion-label>
+              <ion-input
+                [formControlName]="i"
+                [placeholder]="'Enter description point ' + (i + 1)"
+                [class.invalid]="descriptionArray.at(i).invalid && descriptionArray.at(i).touched">
+              </ion-input>
+              <ion-button
+                *ngIf="descriptionArray.length > 1"
+                slot="end"
+                fill="clear"
+                color="danger"
+                (click)="removeDescriptionPoint(i)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </ion-item>
+            <div *ngIf="descriptionArray.at(i).invalid && descriptionArray.at(i).touched" class="error-message">
+              This field is required
+            </div>
+          </div>
+        </div>
+
+        <ion-button
+          *ngIf="descriptionArray.length < 6"
+          fill="outline"
+          size="small"
+          (click)="addDescriptionPoint()"
+          class="add-point-btn">
+          <ion-icon slot="start" name="add-outline"></ion-icon>
+          Add Point
+        </ion-button>
+        <div class="points-counter">
+          {{ descriptionArray.length }} / 6 points
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="form-section">
+        <h3 class="section-title">Pricing</h3>
+        
+        <div class="pricing-row">
+          <ion-item class="form-item">
+            <ion-label position="stacked">Actual Price (₹) <span class="required">*</span></ion-label>
+            <ion-input
+              type="number"
+              formControlName="actualPrice"
+              placeholder="0"
+              min="0"
+              [class.invalid]="planForm.get('actualPrice')?.invalid && planForm.get('actualPrice')?.touched">
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="form-item">
+            <ion-label position="stacked">Discounted Price (₹) <span class="required">*</span></ion-label>
+            <ion-input
+              type="number"
+              formControlName="discountedPrice"
+              placeholder="0"
+              min="0"
+              [class.invalid]="planForm.get('discountedPrice')?.invalid && planForm.get('discountedPrice')?.touched">
+            </ion-input>
+          </ion-item>
+        </div>
+        
+        <div *ngIf="planForm.hasError('invalidPrice') && planForm.get('discountedPrice')?.touched" class="error-message">
+          Discounted price must be less than actual price
+        </div>
+        
+        <div *ngIf="planForm.get('actualPrice')?.value && planForm.get('discountedPrice')?.value && planForm.get('discountedPrice')?.value < planForm.get('actualPrice')?.value" 
+             class="savings-preview">
+          Savings: ₹{{ planForm.get('actualPrice')?.value - planForm.get('discountedPrice')?.value }}
+        </div>
+      </div>
+
+      <!-- Offer Badge Section -->
+      <div class="form-section">
+        <h3 class="section-title">Offer Badge</h3>
+        
+        <ion-item class="form-item toggle-item">
+          <ion-label>Show Offer Badge</ion-label>
+          <ion-toggle formControlName="showOfferBadge"></ion-toggle>
+        </ion-item>
+
+        <div *ngIf="planForm.get('showOfferBadge')?.value" class="offer-badge-section">
+          <!-- Offer Text -->
+          <ion-item class="form-item">
+            <ion-label position="stacked">
+              Offer Text <span class="required">*</span>
+              <span class="char-counter">({{ offerTextLength }}/30)</span>
+            </ion-label>
+            <ion-input
+              formControlName="offerText"
+              placeholder="Enter offer text (max 30 characters)"
+              maxlength="30"
+              [class.invalid]="planForm.get('offerText')?.invalid && planForm.get('offerText')?.touched">
+            </ion-input>
+          </ion-item>
+          <div *ngIf="planForm.get('offerText')?.invalid && planForm.get('offerText')?.touched" class="error-message">
+            Offer text is required (max 30 characters)
+          </div>
+
+          <!-- Date Range -->
+          <div class="date-range-row">
+            <ion-item class="form-item">
+              <ion-label position="stacked">Start Date <span class="required">*</span></ion-label>
+              <ion-datetime
+                formControlName="offerStartAt"
+                presentation="date"
+                [min]="minDate"
+                [class.invalid]="planForm.get('offerStartAt')?.invalid && planForm.get('offerStartAt')?.touched">
+              </ion-datetime>
+            </ion-item>
+
+            <ion-item class="form-item">
+              <ion-label position="stacked">End Date <span class="required">*</span></ion-label>
+              <ion-datetime
+                formControlName="offerEndAt"
+                presentation="date"
+                [min]="minEndDate"
+                [class.invalid]="planForm.get('offerEndAt')?.invalid && planForm.get('offerEndAt')?.touched">
+              </ion-datetime>
+            </ion-item>
+          </div>
+          
+          <div *ngIf="planForm.get('offerStartAt')?.invalid && planForm.get('offerStartAt')?.touched" class="error-message">
+            Start date is required
+          </div>
+          <div *ngIf="planForm.get('offerEndAt')?.invalid && planForm.get('offerEndAt')?.touched" class="error-message">
+            End date is required
+          </div>
+
+          <!-- Countdown Preview -->
+          <div *ngIf="planForm.get('offerEndAt')?.value" class="countdown-preview">
+            <ion-badge color="danger">
+              <ion-icon name="flash-outline"></ion-icon>
+              <span>{{ planForm.get('offerText')?.value || 'Offer' }}</span>
+              <span class="timer">{{ getTimeRemaining() }} remaining</span>
+            </ion-badge>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="form-section">
+        <ion-item class="form-item toggle-item">
+          <ion-label>Active Status</ion-label>
+          <ion-toggle formControlName="isActive"></ion-toggle>
+        </ion-item>
+      </div>
+    </div>
+  </form>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button fill="clear" (click)="cancel()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button fill="solid" (click)="onSubmit()" [disabled]="planForm.invalid">
+        {{ isEditMode ? 'Update' : 'Create' }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>
+

@@ -1,17 +1,151 @@
 <ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
-    <ion-title>Subscriptions Management</ion-title>
-    <ion-button slot="end" (click)="addSubscription()">
-      <ion-icon slot="start" name="add-circle"></ion-icon>
-      Add Subscription
-    </ion-button>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Subscription Management</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Subscriptions Management</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="subscriptions-page">
+  <div class="subscriptions-container">
+    <!-- Header Section -->
+    <div class="page-header">
+      <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Subscription Management</h1>
+        <p class="sub">Manage subscription plans, pricing, and offers</p>
+      </div>
+      <div class="header-actions">
+        <ion-button fill="solid" size="small" (click)="addSubscription()">
+          <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+          Add Subscription
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="filters-panel">
+      <div class="row g-3 align-items-end">
+        <!-- Search Input -->
+        <div class="col-12 col-md-4 col-lg-3">
+          <label class="filter-label">Search</label>
+          <ion-input
+            [(ngModel)]="searchQuery"
+            (ionInput)="onSearch()"
+            placeholder="Search by title"
+            fill="outline"
+            clearable="true">
+            <ion-icon slot="start" name="search-outline"></ion-icon>
+          </ion-input>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-12 col-md-3 col-lg-2">
+          <label class="filter-label">Status</label>
+          <ion-select
+            [(ngModel)]="filterActive"
+            (ionChange)="onFilterChange()"
+            placeholder="All Plans"
+            interface="popover"
+            fill="outline">
+            <ion-select-option value="all">All Plans</ion-select-option>
+            <ion-select-option value="active">Active</ion-select-option>
+            <ion-select-option value="inactive">Inactive</ion-select-option>
+          </ion-select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 20px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 100%; height: 200px; margin-bottom: 20px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 100%; height: 200px;"></ion-skeleton-text>
+    </div>
+
+    <!-- Plans Grid -->
+    <div *ngIf="!isLoading" class="plans-grid">
+      <!-- Empty State -->
+      <div *ngIf="filteredPlans.length === 0" class="empty-state">
+        <ion-icon name="document-outline"></ion-icon>
+        <h3>No Plans Found</h3>
+        <p>Create your first subscription plan to get started</p>
+        <ion-button fill="solid" (click)="addSubscription()">
+          <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+          Add Subscription
+        </ion-button>
+      </div>
+
+      <!-- Plan Cards -->
+      <div *ngFor="let plan of filteredPlans" class="plan-card">
+        <!-- Card Header -->
+        <div class="plan-card-header">
+          <div class="plan-title-section">
+            <h3 class="plan-title">{{ plan.title }}</h3>
+            <ion-badge [color]="getDurationBadge(plan.durationInMonths).color" class="duration-badge">
+              {{ getDurationBadge(plan.durationInMonths).text }}
+            </ion-badge>
+          </div>
+          <ion-badge [color]="plan.isActive ? 'success' : 'medium'" class="status-badge">
+            {{ plan.isActive ? 'Active' : 'Inactive' }}
+          </ion-badge>
+        </div>
+
+        <!-- Offer Badge -->
+        <div *ngIf="plan.showOfferBadge" class="offer-badge-container">
+          <ion-badge [color]="isOfferActive(plan) ? 'danger' : 'medium'" class="offer-badge">
+            <ion-icon name="flash-outline"></ion-icon>
+            <span class="offer-text">{{ plan.offerText }}</span>
+            <span class="offer-timer" *ngIf="isOfferActive(plan)">{{ getTimeRemaining(plan) }} remaining</span>
+            <span class="offer-timer" *ngIf="!isOfferActive(plan) && plan.offerStartAt && plan.offerEndAt">
+              {{ getOfferStatus(plan) }}
+            </span>
+          </ion-badge>
+        </div>
+
+        <!-- Pricing Section -->
+        <div class="pricing-section">
+          <div class="price-row">
+            <span class="price-label">Price:</span>
+            <div class="price-values">
+              <span class="actual-price">₹{{ plan.actualPrice }}</span>
+              <span class="discounted-price">₹{{ plan.discountedPrice }}</span>
+            </div>
+          </div>
+          <div class="savings" *ngIf="plan.discountedPrice < plan.actualPrice">
+            Save ₹{{ plan.actualPrice - plan.discountedPrice }}
+          </div>
+        </div>
+
+        <!-- Description Points -->
+        <div class="description-section">
+          <h4 class="section-title">Features:</h4>
+          <ul class="description-list">
+            <li *ngFor="let point of plan.description">{{ point }}</li>
+          </ul>
+        </div>
+
+        <!-- Card Actions -->
+        <div class="plan-card-actions">
+          <ion-button fill="clear" size="small" (click)="editPlan(plan)">
+            <ion-icon slot="start" name="create-outline"></ion-icon>
+            Edit
+          </ion-button>
+          <ion-button 
+            fill="clear" 
+            size="small" 
+            [color]="plan.isActive ? 'warning' : 'success'"
+            (click)="togglePlanStatus(plan)">
+            <ion-icon [name]="plan.isActive ? 'pause-outline' : 'play-outline'" slot="start"></ion-icon>
+            {{ plan.isActive ? 'Deactivate' : 'Activate' }}
+          </ion-button>
+          <ion-button fill="clear" size="small" color="danger" (click)="deletePlan(plan)">
+            <ion-icon slot="start" name="trash-outline"></ion-icon>
+            Delete
+          </ion-button>
+        </div>
+      </div>
+    </div>
+  </div>
 </ion-content>

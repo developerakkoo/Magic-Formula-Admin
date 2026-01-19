@@ -1,0 +1,95 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Notification Details</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="notification-details-content">
+  <div class="details-container">
+    <!-- Header Section -->
+    <div class="details-header">
+      <div class="badges">
+        <ion-badge [color]="getTypeBadgeColor(notification.type)">
+          {{ notification.type }}
+        </ion-badge>
+        <ion-badge [color]="notification.status === 'SENT' ? 'success' : 'medium'">
+          {{ notification.status }}
+        </ion-badge>
+      </div>
+      <h2 class="details-title">{{ notification.title }}</h2>
+    </div>
+
+    <!-- Message Section -->
+    <div class="details-section">
+      <h3 class="section-title">Message</h3>
+      <p class="details-message">{{ notification.message }}</p>
+    </div>
+
+    <!-- Target Users Section -->
+    <div class="details-section" *ngIf="targetUsersList.length > 0">
+      <h3 class="section-title">
+        Target Users
+        <span class="subtitle">({{ targetUsersList.length }} user(s))</span>
+      </h3>
+      <div class="users-list">
+        <div *ngFor="let user of targetUsersList" class="user-item">
+          <div class="user-info">
+            <div class="user-name">{{ user.fullName }}</div>
+            <div class="user-details">{{ user.email }} • {{ user.mobile }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sent Count -->
+    <div class="details-section" *ngIf="notification.sentCount">
+      <h3 class="section-title">Delivery Status</h3>
+      <div class="sent-status">
+        <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+        <span>Sent to {{ notification.sentCount }} user(s)</span>
+      </div>
+    </div>
+
+    <!-- Timestamps -->
+    <div class="details-section">
+      <h3 class="section-title">Timestamps</h3>
+      <div class="timestamp-item">
+        <strong>Created:</strong> {{ formatDate(notification.createdAt) }}
+      </div>
+      <div class="timestamp-item" *ngIf="notification.updatedAt">
+        <strong>Last Updated:</strong> {{ formatDate(notification.updatedAt) }}
+      </div>
+    </div>
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button fill="clear" color="danger" (click)="delete()">
+        <ion-icon slot="start" name="trash-outline"></ion-icon>
+        Delete
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button fill="outline" (click)="edit()">
+        <ion-icon slot="start" name="create-outline"></ion-icon>
+        Edit
+      </ion-button>
+      <ion-button 
+        *ngIf="notification.status === 'DRAFT'"
+        fill="solid" 
+        color="success"
+        (click)="send()">
+        <ion-icon slot="start" name="send-outline"></ion-icon>
+        Send
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>
+

@@ -1,0 +1,160 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>User Details</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="modal-content">
+  <div class="user-details-container">
+    <!-- User Profile Section -->
+    <div class="profile-section">
+      <div class="avatar-large">
+        <img *ngIf="user.profilePic" [src]="user.profilePic" [alt]="user.fullName">
+        <ion-icon *ngIf="!user.profilePic" name="person-outline"></ion-icon>
+      </div>
+      <h2>{{ user.fullName || 'N/A' }}</h2>
+      <p class="user-email">{{ user.email || 'No email' }}</p>
+      <ion-badge [color]="user.isBlocked ? 'danger' : 'success'">
+        {{ user.isBlocked ? 'Blocked' : 'Active' }}
+      </ion-badge>
+    </div>
+
+    <!-- User Information -->
+    <div class="info-section">
+      <h3>User Information</h3>
+      <ion-list>
+        <ion-item>
+          <ion-label>
+            <h4>Mobile</h4>
+            <p>{{ user.mobile || 'N/A' }}</p>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-label>
+            <h4>Email</h4>
+            <p>{{ user.email || 'N/A' }}</p>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-label>
+            <h4>WhatsApp</h4>
+            <p>{{ user.whatsapp || 'N/A' }}</p>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-label>
+            <h4>Account Created</h4>
+            <p>{{ user.createdAt ? (user.createdAt | date:'medium') : 'N/A' }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- Subscription Information -->
+    <div class="info-section">
+      <h3>Subscription</h3>
+      <ion-list>
+        <ion-item>
+          <ion-label>
+            <h4>Status</h4>
+            <ion-badge [color]="isPlanActive() ? 'success' : 'medium'">
+              {{ isPlanActive() ? 'Active' : 'No Active Subscription' }}
+            </ion-badge>
+          </ion-label>
+        </ion-item>
+        <ion-item *ngIf="user.planExpiry">
+          <ion-label>
+            <h4>Plan Expiry</h4>
+            <p>
+              <span *ngIf="isPlanActive()">
+                {{ user.planExpiry | date:'medium' }}
+              </span>
+              <span *ngIf="!isPlanActive()" class="expired">
+                Expired: {{ user.planExpiry | date:'medium' }}
+              </span>
+            </p>
+          </ion-label>
+        </ion-item>
+        <ion-item *ngIf="!user.planExpiry">
+          <ion-label>
+            <h4>Plan Expiry</h4>
+            <p class="expired">No subscription</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+
+      <!-- Assign Subscription -->
+      <div class="assign-subscription-section">
+        <h4>Assign New Subscription</h4>
+        <ion-item>
+          <ion-label position="stacked">Select Plan</ion-label>
+          <ion-select [(ngModel)]="selectedPlanId" placeholder="Choose a plan">
+            <ion-select-option *ngFor="let plan of availablePlans" [value]="plan._id">
+              {{ plan.title }} ({{ plan.durationInMonths }} month{{ plan.durationInMonths > 1 ? 's' : '' }}) - ₹{{ plan.discountedPrice }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-button expand="block" fill="outline" (click)="assignSubscription()" [disabled]="!selectedPlanId || isLoadingPlans">
+          <ion-icon slot="start" name="card-outline"></ion-icon>
+          Assign Subscription
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- Device Tracking Section -->
+    <div class="info-section">
+      <h3>Device Tracking</h3>
+      <ion-list>
+        <ion-item>
+          <ion-label>
+            <h4>Device ID</h4>
+            <p>{{ user.deviceId || 'Not set' }}</p>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-label>
+            <h4>Last Device Login</h4>
+            <p>{{ user.lastDeviceLogin ? (user.lastDeviceLogin | date:'medium') : 'Never' }}</p>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-label>
+            <h4>Login Attempts</h4>
+            <p>{{ user.loginAttempts || 0 }}</p>
+          </ion-label>
+        </ion-item>
+        <ion-item>
+          <ion-label>
+            <h4>Device Blocked</h4>
+            <ion-badge [color]="user.isDeviceBlocked ? 'warning' : 'success'">
+              {{ user.isDeviceBlocked ? 'Yes' : 'No' }}
+            </ion-badge>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+      
+      <!-- Reset Device Button -->
+      <div class="reset-device-section" *ngIf="user.deviceId">
+        <ion-button expand="block" fill="outline" color="warning" (click)="resetDevice()">
+          <ion-icon slot="start" name="refresh-outline"></ion-icon>
+          Reset Device
+        </ion-button>
+        <p class="help-text">Allow user to login from a new device</p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="modal-actions">
+      <ion-button expand="block" fill="outline" (click)="editUser()">
+        <ion-icon slot="start" name="create-outline"></ion-icon>
+        Edit User
+      </ion-button>
+    </div>
+  </div>
+</ion-content>
+

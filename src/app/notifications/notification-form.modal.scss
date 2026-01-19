@@ -1,0 +1,265 @@
+:host {
+  ion-content.notification-form-content {
+    --background: #f7f8fb;
+    color: #0f1115;
+  }
+}
+
+.form-container {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.form-section {
+  background: #ffffff;
+  border: 1px solid #e3e6ee;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 12px 32px rgba(15, 17, 21, 0.06);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f1115;
+  margin: 0 0 20px 0;
+  letter-spacing: -0.2px;
+
+  .subtitle {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9aa0ad;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 8px;
+  }
+}
+
+.form-item {
+  --background: transparent;
+  --border-color: #e3e6ee;
+  --border-width: 1px;
+  --border-style: solid;
+  --border-radius: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  margin-bottom: 16px;
+
+  ion-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4c5160;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 8px;
+
+    .required {
+      color: #ef4444;
+      margin-left: 2px;
+    }
+  }
+
+  ion-input,
+  ion-textarea,
+  ion-select {
+    --padding-start: 0;
+    --padding-end: 0;
+    font-size: 14px;
+    color: #0f1115;
+  }
+
+  &.invalid {
+    --border-color: #ef4444;
+  }
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: -12px;
+  margin-bottom: 16px;
+  padding-left: 12px;
+}
+
+// User Selection
+.selected-users-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f7f8fb;
+  border-radius: 12px;
+  border: 1px solid #e3e6ee;
+
+  ion-chip {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+
+    ion-icon {
+      cursor: pointer;
+      font-size: 18px;
+      margin-left: 4px;
+    }
+  }
+}
+
+.user-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  ion-button {
+    --border-radius: 8px;
+    --border-color: #e3e6ee;
+    --color: #0f1115;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: none;
+    height: 36px;
+  }
+}
+
+.users-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e3e6ee;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e3e6ee;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #f7f8fb;
+  }
+
+  &.selected {
+    background: #e8f5e9;
+  }
+
+  .user-info {
+    flex: 1;
+  }
+
+  .user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f1115;
+    margin: 0 0 4px 0;
+  }
+
+  .user-details {
+    font-size: 12px;
+    color: #4c5160;
+  }
+}
+
+.no-users {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9aa0ad;
+  font-size: 14px;
+}
+
+// Preview Section
+.notification-preview {
+  padding: 20px;
+  background: #f7f8fb;
+  border-radius: 12px;
+  border: 1px solid #e3e6ee;
+}
+
+.preview-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  ion-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.preview-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f1115;
+  margin: 0 0 12px 0;
+}
+
+.preview-message {
+  font-size: 14px;
+  color: #4c5160;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+}
+
+.preview-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #e3e6ee;
+
+  .preview-users {
+    font-size: 12px;
+    color: #4c5160;
+    font-weight: 600;
+  }
+}
+
+// Footer
+ion-footer {
+  ion-toolbar {
+    --background: #ffffff;
+    --border-color: #e3e6ee;
+    --border-width: 1px 0 0 0;
+    padding: 12px 16px;
+
+    ion-button {
+      --border-radius: 8px;
+      font-weight: 600;
+      text-transform: none;
+      height: 40px;
+
+      &[fill="solid"] {
+        --background: #0f1115;
+        --color: #ffffff;
+      }
+
+      &[fill="clear"] {
+        --color: #4c5160;
+      }
+
+      &[disabled] {
+        opacity: 0.5;
+      }
+    }
+  }
+}
+

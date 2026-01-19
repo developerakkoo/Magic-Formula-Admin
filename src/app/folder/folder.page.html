@@ -24,26 +24,34 @@
         <h2>Users Management</h2>
       </div>
       <div class="cards-grid">
-        <div class="stat-card">
+        <div class="stat-card" *ngIf="!isLoadingAnalytics">
           <p class="label">Total Users</p>
-          <h3>55</h3>
+          <h3>{{ userAnalytics?.totalUsers || 0 }}</h3>
           <p class="hint">All registered accounts</p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" *ngIf="!isLoadingAnalytics">
           <p class="label">Live Users (Today)</p>
-          <h3>12</h3>
+          <h3>{{ userAnalytics?.liveUsers || 0 }}</h3>
           <p class="hint">Active in the last 24h</p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" *ngIf="!isLoadingAnalytics">
           <p class="label">Subscribed Users</p>
-          <h3>55</h3>
+          <h3>{{ userAnalytics?.subscribedUsers || 0 }}</h3>
           <p class="hint">On paid plans</p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" *ngIf="!isLoadingAnalytics">
           <p class="label">Unsubscribed Users</p>
-          <h3>3</h3>
+          <h3>{{ userAnalytics?.unsubscribedUsers || 0 }}</h3>
           <p class="hint">Churned this period</p>
         </div>
+        <!-- Loading skeleton -->
+        <ng-container *ngIf="isLoadingAnalytics">
+          <div class="stat-card" *ngFor="let i of [1,2,3,4]">
+            <p class="label"><ion-skeleton-text animated style="width: 60%;"></ion-skeleton-text></p>
+            <h3><ion-skeleton-text animated style="width: 40%;"></ion-skeleton-text></h3>
+            <p class="hint"><ion-skeleton-text animated style="width: 80%;"></ion-skeleton-text></p>
+          </div>
+        </ng-container>
       </div>
     </section>
 
@@ -53,26 +61,34 @@
         <h2>Earnings Management</h2>
       </div>
       <div class="cards-grid">
-        <div class="stat-card">
+        <div class="stat-card" *ngIf="!isLoadingAnalytics">
           <p class="label">Today's Earnings</p>
-          <h3>₹145,000</h3>
+          <h3>₹{{ formatCurrency(earningsAnalytics?.todayEarnings || 0) }}</h3>
           <p class="hint">Real-time collections</p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" *ngIf="!isLoadingAnalytics">
           <p class="label">Monthly Earnings</p>
-          <h3>₹445,000</h3>
+          <h3>₹{{ formatCurrency(earningsAnalytics?.monthlyEarnings || 0) }}</h3>
           <p class="hint">Current month to date</p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" *ngIf="!isLoadingAnalytics">
           <p class="label">Total Earnings</p>
-          <h3>₹11,45,000</h3>
+          <h3>₹{{ formatCurrency(earningsAnalytics?.totalEarnings || 0) }}</h3>
           <p class="hint">All-time gross</p>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" *ngIf="!isLoadingAnalytics">
           <p class="label">Best Selling Plan</p>
-          <h3>Plan name</h3>
+          <h3>{{ bestsellerPlan?.planTitle || 'N/A' }}</h3>
           <p class="hint">Top performer</p>
         </div>
+        <!-- Loading skeleton -->
+        <ng-container *ngIf="isLoadingAnalytics">
+          <div class="stat-card" *ngFor="let i of [1,2,3,4]">
+            <p class="label"><ion-skeleton-text animated style="width: 60%;"></ion-skeleton-text></p>
+            <h3><ion-skeleton-text animated style="width: 40%;"></ion-skeleton-text></h3>
+            <p class="hint"><ion-skeleton-text animated style="width: 80%;"></ion-skeleton-text></p>
+          </div>
+        </ng-container>
       </div>
     </section>
 

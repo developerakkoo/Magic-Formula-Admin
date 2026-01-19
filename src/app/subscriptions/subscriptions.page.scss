@@ -1,0 +1,402 @@
+:host {
+  ion-content.subscriptions-page {
+    --background: #f7f8fb;
+    color: #0f1115;
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+}
+
+.subscriptions-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+  width: 100%;
+
+  @media (max-width: 1200px) {
+    padding: 24px 16px 32px;
+  }
+}
+
+// Header Section
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #ffffff;
+  color: #0f1115;
+  padding: 20px 24px;
+  border-radius: 18px;
+  border: 1px solid #e3e6ee;
+  box-shadow: 0 14px 38px rgba(15, 17, 21, 0.08);
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 4px 0;
+    font-size: 26px;
+    letter-spacing: -0.2px;
+  }
+
+  .sub {
+    margin: 0;
+    color: #4c5160;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    ion-button {
+      margin: 0;
+      --border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: none;
+      height: auto;
+      --padding-top: 8px;
+      --padding-bottom: 8px;
+      --padding-start: 12px;
+      --padding-end: 12px;
+
+      &[fill="solid"] {
+        --background: #0f1115;
+        --color: #ffffff;
+      }
+    }
+  }
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #9aa0ad;
+  font-weight: 700;
+}
+
+// Filters Panel
+.filters-panel {
+  background: #ffffff;
+  border: 1px solid #e3e6ee;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 12px 32px rgba(15, 17, 21, 0.06);
+
+  .filter-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4c5160;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  ion-input,
+  ion-select {
+    --border-radius: 8px;
+    --border-color: #e3e6ee;
+    --border-width: 1px;
+    --border-style: solid;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    --padding-top: 10px;
+    --padding-bottom: 10px;
+    height: 44px;
+    font-size: 14px;
+  }
+}
+
+// Loading State
+.loading-container {
+  padding: 20px 0;
+}
+
+// Plans Grid
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  @media (min-width: 769px) and (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// Plan Card
+.plan-card {
+  background: #ffffff;
+  border: 1px solid #e3e6ee;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 12px 32px rgba(15, 17, 21, 0.06);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &:hover {
+    box-shadow: 0 16px 40px rgba(15, 17, 21, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+// Plan Card Header
+.plan-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e3e6ee;
+
+  .plan-title-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .plan-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f1115;
+    letter-spacing: -0.3px;
+  }
+
+  .duration-badge {
+    align-self: flex-start;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+// Offer Badge
+.offer-badge-container {
+  margin: -8px 0 8px;
+}
+
+.offer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+
+  ion-icon {
+    font-size: 16px;
+  }
+
+  .offer-text {
+    font-weight: 700;
+  }
+
+  .offer-timer {
+    font-weight: 500;
+    opacity: 0.9;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+// Pricing Section
+.pricing-section {
+  padding: 16px;
+  background: #f7f8fb;
+  border-radius: 12px;
+  border: 1px solid #e3e6ee;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+
+  .price-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4c5160;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .price-values {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .actual-price {
+    font-size: 16px;
+    color: #9aa0ad;
+    text-decoration: line-through;
+    font-weight: 500;
+  }
+
+  .discounted-price {
+    font-size: 24px;
+    color: #0f1115;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+}
+
+.savings {
+  font-size: 12px;
+  color: #22c55e;
+  font-weight: 600;
+  text-align: right;
+}
+
+// Description Section
+.description-section {
+  flex: 1;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4c5160;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin: 0 0 12px 0;
+}
+
+.description-list {
+  margin: 0;
+  padding-left: 20px;
+  list-style: none;
+
+  li {
+    position: relative;
+    padding-left: 16px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #4c5160;
+    line-height: 1.6;
+
+    &::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #0f1115;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// Plan Card Actions
+.plan-card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #e3e6ee;
+  flex-wrap: wrap;
+
+  ion-button {
+    flex: 1;
+    min-width: 80px;
+    margin: 0;
+    --border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: none;
+    height: 36px;
+
+    &[fill="clear"] {
+      --color: #4c5160;
+
+      &[color="danger"] {
+        --color: #ef4444;
+      }
+
+      &[color="warning"] {
+        --color: #f59e0b;
+      }
+
+      &[color="success"] {
+        --color: #22c55e;
+      }
+    }
+  }
+}
+
+// Empty State
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  background: #ffffff;
+  border: 1px solid #e3e6ee;
+  border-radius: 18px;
+
+  ion-icon {
+    font-size: 64px;
+    color: #9aa0ad;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    color: #0f1115;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0 0 24px 0;
+    color: #4c5160;
+    font-size: 14px;
+  }
+
+  ion-button {
+    --border-radius: 8px;
+    --background: #0f1115;
+    --color: #ffffff;
+    font-weight: 600;
+    text-transform: none;
+  }
+}
+

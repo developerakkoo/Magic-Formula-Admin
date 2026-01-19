@@ -1,0 +1,239 @@
+:host {
+  ion-content.plan-form-content {
+    --background: #f7f8fb;
+    color: #0f1115;
+  }
+}
+
+.form-container {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-section {
+  background: #ffffff;
+  border: 1px solid #e3e6ee;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 12px 32px rgba(15, 17, 21, 0.06);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f1115;
+  margin: 0 0 20px 0;
+  letter-spacing: -0.2px;
+
+  .subtitle {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9aa0ad;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 8px;
+  }
+}
+
+.form-item {
+  --background: transparent;
+  --border-color: #e3e6ee;
+  --border-width: 1px;
+  --border-style: solid;
+  --border-radius: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  margin-bottom: 16px;
+
+  ion-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #4c5160;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 8px;
+
+    .required {
+      color: #ef4444;
+      margin-left: 2px;
+    }
+
+    .char-counter {
+      font-size: 11px;
+      font-weight: 500;
+      color: #9aa0ad;
+      text-transform: none;
+      margin-left: 4px;
+    }
+  }
+
+  ion-input,
+  ion-select,
+  ion-datetime {
+    --padding-start: 0;
+    --padding-end: 0;
+    font-size: 14px;
+    color: #0f1115;
+  }
+
+  &.toggle-item {
+    --border-width: 0;
+    --padding-start: 0;
+    --padding-end: 0;
+    margin-bottom: 0;
+
+    ion-label {
+      font-size: 14px;
+      text-transform: none;
+      font-weight: 600;
+      color: #0f1115;
+    }
+  }
+
+  &.invalid {
+    --border-color: #ef4444;
+  }
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: -12px;
+  margin-bottom: 16px;
+  padding-left: 12px;
+}
+
+// Description Points
+.description-points {
+  margin-bottom: 16px;
+}
+
+.description-point-item {
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.add-point-btn {
+  margin-top: 8px;
+  --border-radius: 8px;
+  --border-color: #e3e6ee;
+  --color: #0f1115;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: none;
+  height: 36px;
+}
+
+.points-counter {
+  font-size: 11px;
+  color: #9aa0ad;
+  margin-top: 8px;
+  text-align: right;
+  font-weight: 500;
+}
+
+// Pricing Row
+.pricing-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 576px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.savings-preview {
+  font-size: 13px;
+  color: #22c55e;
+  font-weight: 600;
+  margin-top: 8px;
+  text-align: right;
+}
+
+// Offer Badge Section
+.offer-badge-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e3e6ee;
+}
+
+.date-range-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 576px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.countdown-preview {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f7f8fb;
+  border-radius: 12px;
+  border: 1px solid #e3e6ee;
+  text-align: center;
+
+  ion-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+
+    ion-icon {
+      font-size: 18px;
+    }
+
+    .timer {
+      font-weight: 500;
+      opacity: 0.9;
+    }
+  }
+}
+
+// Footer
+ion-footer {
+  ion-toolbar {
+    --background: #ffffff;
+    --border-color: #e3e6ee;
+    --border-width: 1px 0 0 0;
+    padding: 12px 16px;
+
+    ion-button {
+      --border-radius: 8px;
+      font-weight: 600;
+      text-transform: none;
+      height: 40px;
+
+      &[fill="solid"] {
+        --background: #0f1115;
+        --color: #ffffff;
+      }
+
+      &[fill="clear"] {
+        --color: #4c5160;
+      }
+
+      &[disabled] {
+        opacity: 0.5;
+      }
+    }
+  }
+}
+
