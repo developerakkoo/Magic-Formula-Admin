@@ -272,12 +272,53 @@ export class NotificationsPage implements OnInit, OnDestroy {
       } else if (data.data && data.data.action === 'delete') {
         this.deleteNotification(notification);
       } else if (data.data && data.data.action === 'send' && notification.status === 'DRAFT') {
-        // Send notification - modal already closed, so we can proceed
-        this.sendNotification(notification);
+        this.sendDraft(notification);
+      } else if (data.data && data.data.action === 'resend' && notification.status === 'SENT') {
+        this.resendNotification(notification);
       }
     });
 
     return await modal.present();
+  }
+
+  /**
+   * Open user selection to send a draft notification (drafts have no target users yet).
+   */
+  sendDraft(notification: Notification) {
+    if (!notification._id) {
+      this.presentToast('Invalid notification', 'danger');
+      return;
+    }
+    if (notification.status !== 'DRAFT') {
+      this.presentToast('Only draft notifications can be sent this way', 'warning');
+      return;
+    }
+    this.openSendToUsers(notification);
+  }
+
+  /**
+   * Open user selection to resend a sent notification to (new) users.
+   */
+  resendNotification(notification: Notification) {
+    if (!notification._id) {
+      this.presentToast('Invalid notification', 'danger');
+      return;
+    }
+    this.openSendToUsers(notification);
+  }
+
+  private openSendToUsers(notification: Notification) {
+    this.router.navigate(['/notifications/select-users'], {
+      state: {
+        notificationId: notification._id,
+        notificationData: {
+          title: notification.title,
+          message: notification.message,
+          type: notification.type
+        },
+        isSendingDraft: true
+      }
+    });
   }
 
   async sendNotification(notification: Notification) {
@@ -291,26 +332,27 @@ export class NotificationsPage implements OnInit, OnDestroy {
       return;
     }
 
+    // Draft without target users: go to user selection to pick recipients
+    if (notification.status === 'DRAFT') {
+      this.sendDraft(notification);
+      return;
+    }
+
     if (!notification.targetUsers || notification.targetUsers.length === 0) {
       this.presentToast('Please select users to send notification', 'warning');
       return;
     }
 
-    // Determine sendTo type based on targetUsers
     let sendTo: 'ALL' | 'SUBSCRIBED' | 'CUSTOM' = 'CUSTOM';
     let userIds: string[] | undefined = notification.targetUsers;
 
-    // Note: We're using CUSTOM for now. If you want to support ALL or SUBSCRIBED,
-    // you'll need to add UI controls to select the sendTo option
     this.notificationService.sendNotificationToUsers({
       notificationId: notification._id,
       userIds: userIds,
       sendTo: sendTo
     }).subscribe({
       next: (response) => {
-        // Reload notifications to get updated status
         this.loadNotifications();
-        // Show success message
         this.presentToast(`Notification sent successfully to ${response.sentCount} user(s)`, 'success');
       },
       error: (error) => {

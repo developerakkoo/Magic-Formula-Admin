@@ -83,6 +83,7 @@
         <div class="plan-card-header">
           <div class="plan-title-section">
             <h3 class="plan-title">{{ plan.title }}</h3>
+            <ion-badge *ngIf="plan.isStarterOffer" color="tertiary" class="starter-chip">Starter</ion-badge>
             <ion-badge [color]="getDurationBadge(plan.durationInMonths).color" class="duration-badge">
               {{ getDurationBadge(plan.durationInMonths).text }}
             </ion-badge>

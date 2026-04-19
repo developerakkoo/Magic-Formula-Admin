@@ -89,6 +89,14 @@
         <ion-icon slot="start" name="send-outline"></ion-icon>
         Send
       </ion-button>
+      <ion-button 
+        *ngIf="notification.status === 'SENT'"
+        fill="solid" 
+        color="primary"
+        (click)="resend()">
+        <ion-icon slot="start" name="send-outline"></ion-icon>
+        Resend
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-footer>

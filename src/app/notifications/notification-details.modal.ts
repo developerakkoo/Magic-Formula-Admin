@@ -77,6 +77,10 @@ export class NotificationDetailsModalComponent implements OnInit {
     this.modalController.dismiss({ action: 'send' });
   }
 
+  resend() {
+    this.modalController.dismiss({ action: 'resend' });
+  }
+
   close() {
     this.modalController.dismiss();
   }

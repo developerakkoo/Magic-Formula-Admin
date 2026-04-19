@@ -18,6 +18,9 @@ export interface User {
   planExpiry?: Date | string;
   deviceId?: string;
   lastDeviceLogin?: Date | string;
+  lastActivity?: Date | string; // Last activity timestamp for live user tracking
+  deviceChangeRequested?: boolean;
+  deviceChangeRequestedAt?: Date | string;
   loginAttempts?: number;
   isDeviceBlocked?: boolean;
   createdAt?: Date | string;
@@ -33,6 +36,23 @@ export interface UserResponse {
   success: boolean;
   message?: string;
   data: User;
+}
+
+/** Response from POST /api/admin/bulk-create-users (see ADMIN_BULK_WATI_API.md) */
+export interface BulkCreateUsersResponse {
+  message: string;
+  summary: { totalRows: number; created: number; skipped: number; failed: number };
+  created: Array<{ rowNumber: number; userId?: string; email?: string; whatsapp?: string; resetLink?: string; whatsappSent?: boolean }>;
+  skipped: Array<{ rowNumber: number; email?: string; reason: string }>;
+  failed: Array<{ rowNumber: number; reason?: string; email?: string; whatsapp?: string }>;
+}
+
+/** Response from POST /api/admin/bulk-subscription (see ADMIN_BULK_WATI_API.md) */
+export interface BulkSubscriptionResponse {
+  message: string;
+  summary: { totalRows: number; successCount: number; failedCount: number };
+  success: Array<{ rowNumber: number; userId?: string; email?: string; mobile?: string; planCode: string; planName?: string; startDate?: string; expiryDate?: string }>;
+  failed: Array<{ rowNumber: number; email?: string; mobile?: string; planCode?: string; reason: string }>;
 }
 
 @Injectable({
@@ -181,12 +201,12 @@ export class UsersService {
   }
 
   /**
-   * Bulk upload subscriptions
+   * Bulk upload subscriptions (Excel: Email, Mobile, Plan Code). See ADMIN_BULK_WATI_API.md.
    */
-  bulkUploadSubscriptions(file: File): Observable<any> {
+  bulkUploadSubscriptions(file: File): Observable<BulkSubscriptionResponse> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post(`${this.apiUrl}/bulk-subscription`, formData).pipe(
+    return this.http.post<BulkSubscriptionResponse>(`${this.apiUrl}/bulk-subscription`, formData).pipe(
       catchError(error => {
         return throwError(() => this.handleError(error));
       })
@@ -194,12 +214,12 @@ export class UsersService {
   }
 
   /**
-   * Bulk create users
+   * Bulk create users (Excel: Full Name, Email, WhatsApp, Password). Sends WATI template per user. See ADMIN_BULK_WATI_API.md.
    */
-  bulkCreateUsers(file: File): Observable<any> {
+  bulkCreateUsers(file: File): Observable<BulkCreateUsersResponse> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post(`${this.apiUrl}/bulk-create-users`, formData).pipe(
+    return this.http.post<BulkCreateUsersResponse>(`${this.apiUrl}/bulk-create-users`, formData).pipe(
       catchError(error => {
         return throwError(() => this.handleError(error));
       })
@@ -250,7 +270,8 @@ export class UsersService {
       planExpiry: user.planExpiry ? new Date(user.planExpiry) : undefined,
       createdAt: user.createdAt ? new Date(user.createdAt) : undefined,
       updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined,
-      lastDeviceLogin: user.lastDeviceLogin ? new Date(user.lastDeviceLogin) : undefined
+      lastDeviceLogin: user.lastDeviceLogin ? new Date(user.lastDeviceLogin) : undefined,
+      lastActivity: user.lastActivity ? new Date(user.lastActivity) : undefined
     };
   }
 

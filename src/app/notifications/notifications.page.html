@@ -246,6 +246,15 @@
                       title="Send">
                       <ion-icon slot="icon-only" name="send-outline"></ion-icon>
                     </ion-button>
+                    <ion-button 
+                      *ngIf="notification.status === 'SENT'"
+                      fill="clear" 
+                      size="small" 
+                      color="primary"
+                      (click)="resendNotification(notification)"
+                      title="Resend">
+                      <ion-icon slot="icon-only" name="send-outline"></ion-icon>
+                    </ion-button>
                     <ion-button fill="clear" size="small" color="danger" (click)="deleteNotification(notification)" title="Delete">
                       <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
                     </ion-button>
@@ -306,6 +315,15 @@
             (click)="sendNotification(notification)">
             <ion-icon slot="start" name="send-outline"></ion-icon>
             Send
+          </ion-button>
+          <ion-button 
+            *ngIf="notification.status === 'SENT'"
+            fill="clear" 
+            size="small" 
+            color="primary"
+            (click)="resendNotification(notification)">
+            <ion-icon slot="start" name="send-outline"></ion-icon>
+            Resend
           </ion-button>
           <ion-button fill="clear" size="small" color="danger" (click)="deleteNotification(notification)">
             <ion-icon slot="start" name="trash-outline"></ion-icon>

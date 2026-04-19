@@ -29,6 +29,34 @@
           Title is required
         </div>
 
+        <!-- Code -->
+        <ion-item class="form-item">
+          <ion-label position="stacked">
+            Plan Code <span class="required">*</span>
+            <span class="hint">(Used for bulk operations)</span>
+          </ion-label>
+          <ion-input
+            formControlName="code"
+            placeholder="e.g., PLAN1M, PLAN3M"
+            maxlength="20"
+            [attr.list]="planCodeListId"
+            [class.invalid]="planForm.get('code')?.invalid && planForm.get('code')?.touched">
+          </ion-input>
+        </ion-item>
+        <datalist [id]="planCodeListId">
+          <option *ngFor="let c of codeDatalistOptions" [value]="c"></option>
+        </datalist>
+        <div *ngIf="planForm.get('code')?.invalid && planForm.get('code')?.touched" class="error-message">
+          <span *ngIf="planForm.get('code')?.errors?.['required']">Plan code is required</span>
+          <span *ngIf="planForm.get('code')?.errors?.['maxlength']">Plan code must be 20 characters or less</span>
+        </div>
+        <div *ngIf="codeConflictMessage" class="error-message">
+          {{ codeConflictMessage }}
+        </div>
+        <div *ngIf="planForm.get('code')?.value" class="hint-text">
+          Code will be converted to uppercase automatically
+        </div>
+
         <!-- Duration -->
         <ion-item class="form-item">
           <ion-label position="stacked">Duration <span class="required">*</span></ion-label>
@@ -47,7 +75,7 @@
       <!-- Description Points -->
       <div class="form-section">
         <h3 class="section-title">
-          Description Points
+          Description Points <span class="required">*</span>
           <span class="subtitle">(Max 6 points)</span>
         </h3>
         
@@ -108,24 +136,27 @@
           </ion-item>
 
           <ion-item class="form-item">
-            <ion-label position="stacked">Discounted Price (₹) <span class="required">*</span></ion-label>
+            <ion-label position="stacked" class="ion-text-wrap">
+              Discounted Price (₹)
+              
+              <span class="required">*</span>
+            </ion-label>
             <ion-input
               type="number"
               formControlName="discountedPrice"
-              placeholder="0"
+              placeholder="Same as actual if empty"
               min="0"
               [class.invalid]="planForm.get('discountedPrice')?.invalid && planForm.get('discountedPrice')?.touched">
             </ion-input>
           </ion-item>
         </div>
         
-        <div *ngIf="planForm.hasError('invalidPrice') && planForm.get('discountedPrice')?.touched" class="error-message">
-          Discounted price must be less than actual price
+        <div *ngIf="planForm.hasError('invalidPrice') && (planForm.get('discountedPrice')?.touched || planForm.get('actualPrice')?.touched)" class="error-message">
+          Discounted price must not be greater than actual price
         </div>
         
-        <div *ngIf="planForm.get('actualPrice')?.value && planForm.get('discountedPrice')?.value && planForm.get('discountedPrice')?.value < planForm.get('actualPrice')?.value" 
-             class="savings-preview">
-          Savings: ₹{{ planForm.get('actualPrice')?.value - planForm.get('discountedPrice')?.value }}
+        <div *ngIf="hasPricingSavingsPreview" class="savings-preview">
+          Savings: ₹{{ pricingSavingsAmount }}
         </div>
       </div>
 
@@ -199,9 +230,17 @@
 
       <!-- Status -->
       <div class="form-section">
+        <h3 class="section-title">Visibility</h3>
         <ion-item class="form-item toggle-item">
           <ion-label>Active Status</ion-label>
           <ion-toggle formControlName="isActive"></ion-toggle>
+        </ion-item>
+        <ion-item class="form-item toggle-item">
+          <ion-label class="ion-text-wrap">
+            Starter / intro offer plan
+            <p class="hint-muted">Marks this plan as the one-time intro tier. Only one active starter plan should exist.</p>
+          </ion-label>
+          <ion-toggle formControlName="isStarterOffer" slot="end"></ion-toggle>
         </ion-item>
       </div>
     </div>

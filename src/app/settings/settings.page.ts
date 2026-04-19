@@ -32,7 +32,8 @@ export class SettingsPage implements OnInit {
       maintenanceMode: [false],
       maintenanceMessage: [''],
       enableWhatsAppNotifications: [true],
-      enableFirebaseNotifications: [true]
+      enableFirebaseNotifications: [true],
+      starterOfferVisibleToUsers: [true]
     });
   }
 
@@ -63,7 +64,8 @@ export class SettingsPage implements OnInit {
         maintenanceMode: settings.maintenanceMode || false,
         maintenanceMessage: settings.maintenanceMessage || '',
         enableWhatsAppNotifications: settings.enableWhatsAppNotifications !== false,
-        enableFirebaseNotifications: settings.enableFirebaseNotifications !== false
+        enableFirebaseNotifications: settings.enableFirebaseNotifications !== false,
+        starterOfferVisibleToUsers: settings.starterOfferVisibleToUsers !== false
       });
     } catch (error: any) {
       const errorMessage = error?.message || 'Failed to load settings. Please try again.';
@@ -99,7 +101,8 @@ export class SettingsPage implements OnInit {
         maintenanceMode: formValue.maintenanceMode,
         maintenanceMessage: formValue.maintenanceMessage,
         enableWhatsAppNotifications: formValue.enableWhatsAppNotifications,
-        enableFirebaseNotifications: formValue.enableFirebaseNotifications
+        enableFirebaseNotifications: formValue.enableFirebaseNotifications,
+        starterOfferVisibleToUsers: formValue.starterOfferVisibleToUsers
       };
 
       // Only update secret if a new value was provided

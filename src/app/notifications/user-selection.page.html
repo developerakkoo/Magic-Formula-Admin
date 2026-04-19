@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>{{ isCreatingNotification ? 'Create Notification' : 'Select Users' }}</ion-title>
+    <ion-title>{{ isSendingDraft ? 'Send Draft' : (isCreatingNotification ? 'Create Notification' : 'Select Users') }}</ion-title>
     <ion-buttons slot="start">
       <ion-button (click)="cancel()">
         <ion-icon name="arrow-back-outline"></ion-icon>
@@ -16,8 +16,8 @@
 
 <ion-content>
   <div class="user-selection-container">
-    <!-- Notification Form Section (shown when creating) -->
-    <div *ngIf="isCreatingNotification" class="notification-form-section">
+    <!-- Notification Form Section (shown when creating or sending draft) -->
+    <div *ngIf="isCreatingNotification || isSendingDraft" class="notification-form-section">
       <div class="form-container">
         <h3 class="form-title">Create Notification</h3>
         <form [formGroup]="notificationForm">
@@ -69,6 +69,29 @@
             </ion-select>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Selected Users (always at top, visible even when searching) -->
+    <div class="selected-users-section" *ngIf="selectedUsers.length > 0">
+      <h4 class="selected-users-heading">
+        <ion-icon name="people-outline"></ion-icon>
+        Selected users ({{ getSelectedCount() }})
+      </h4>
+      <div class="selected-users-list">
+        <div
+          *ngFor="let user of selectedUsers"
+          class="selected-user-chip">
+          <div class="selected-user-info">
+            <span class="selected-user-name">{{ user.fullName || 'No Name' }}</span>
+            <span class="selected-user-detail" *ngIf="user.email || user.mobile">
+              {{ user.email || user.mobile }}
+            </span>
+          </div>
+          <ion-button fill="clear" size="small" (click)="removeUser(user); $event.stopPropagation()" title="Remove">
+            <ion-icon slot="icon-only" name="close-circle-outline"></ion-icon>
+          </ion-button>
+        </div>
       </div>
     </div>
 
@@ -270,11 +293,20 @@
     </ion-title>
     <ion-buttons slot="end">
       <ion-button
-        *ngIf="!isCreatingNotification"
+        *ngIf="!isCreatingNotification && !isSendingDraft"
         fill="solid"
         (click)="confirmSelection()"
         [disabled]="getSelectedCount() === 0">
         Confirm ({{ getSelectedCount() }})
+      </ion-button>
+      <ion-button
+        *ngIf="isCreatingNotification"
+        fill="outline"
+        (click)="saveAsDraft()"
+        [disabled]="notificationForm?.invalid || isSending">
+        <ion-spinner *ngIf="isSending" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!isSending" name="save-outline" slot="start"></ion-icon>
+        Save as Draft
       </ion-button>
       <ion-button
         *ngIf="isCreatingNotification"
@@ -283,7 +315,16 @@
         [disabled]="notificationForm?.invalid || getSelectedCount() === 0 || isSending">
         <ion-spinner *ngIf="isSending" name="crescent" slot="start"></ion-spinner>
         <ion-icon *ngIf="!isSending" name="send-outline" slot="start"></ion-icon>
-        {{ isSending ? 'Sending...' : 'Create & Send Notification' }}
+        {{ isSending ? 'Sending...' : 'Create & Send' }}
+      </ion-button>
+      <ion-button
+        *ngIf="isSendingDraft"
+        fill="solid"
+        (click)="createAndSendNotification()"
+        [disabled]="getSelectedCount() === 0 || isSending">
+        <ion-spinner *ngIf="isSending" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!isSending" name="send-outline" slot="start"></ion-icon>
+        {{ isSending ? 'Sending...' : 'Send to ' + getSelectedCount() + ' user(s)' }}
       </ion-button>
     </ion-buttons>
   </ion-toolbar>

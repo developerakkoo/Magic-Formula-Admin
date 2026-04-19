@@ -47,7 +47,10 @@
     <form [formGroup]="settingsForm" *ngIf="!isLoading" class="settings-form">
       <!-- General Settings -->
       <div class="settings-section">
-        <h2 class="section-title">General Settings</h2>
+        <h2 class="section-title">
+          <ion-icon name="settings-outline"></ion-icon>
+          General Settings
+        </h2>
         
         <ion-item class="form-item">
           <ion-label position="stacked">App Name <span class="required">*</span></ion-label>
@@ -71,7 +74,10 @@
 
       <!-- Notification Settings -->
       <div class="settings-section">
-        <h2 class="section-title">Notification Settings</h2>
+        <h2 class="section-title">
+          <ion-icon name="notifications-outline"></ion-icon>
+          Notification Settings
+        </h2>
         
         <ion-item class="form-item">
           <ion-label position="stacked">Default Notification Title <span class="required">*</span></ion-label>
@@ -103,9 +109,27 @@
         </ion-item>
       </div>
 
+      <!-- Subscriptions -->
+      <div class="settings-section">
+        <h2 class="section-title">
+          <ion-icon name="pricetag-outline"></ion-icon>
+          Subscriptions
+        </h2>
+        <ion-item class="form-item">
+          <ion-label class="ion-text-wrap">
+            Show starter / intro offer to users
+            <p class="field-hint">When off, the intro plan is hidden from the user app and self-serve checkout. You can still assign any plan manually from user details.</p>
+          </ion-label>
+          <ion-toggle formControlName="starterOfferVisibleToUsers" slot="end"></ion-toggle>
+        </ion-item>
+      </div>
+
       <!-- Payment Settings -->
       <div class="settings-section">
-        <h2 class="section-title">Payment Settings</h2>
+        <h2 class="section-title">
+          <ion-icon name="card-outline"></ion-icon>
+          Payment Settings
+        </h2>
         
         <ion-item class="form-item">
           <ion-label position="stacked">Razorpay Key ID</ion-label>
@@ -131,12 +155,20 @@
 
       <!-- System Settings -->
       <div class="settings-section">
-        <h2 class="section-title">System Settings</h2>
+        <h2 class="section-title">
+          <ion-icon name="server-outline"></ion-icon>
+          System Settings
+        </h2>
         
         <ion-item class="form-item">
           <ion-label>Maintenance Mode</ion-label>
           <ion-toggle formControlName="maintenanceMode"></ion-toggle>
         </ion-item>
+
+        <div *ngIf="settingsForm.get('maintenanceMode')?.value" class="maintenance-warning">
+          <ion-icon name="warning-outline"></ion-icon>
+          <p>Maintenance mode is enabled. Users will see the maintenance message when accessing the app.</p>
+        </div>
 
         <ion-item class="form-item" *ngIf="settingsForm.get('maintenanceMode')?.value">
           <ion-label position="stacked">Maintenance Message</ion-label>

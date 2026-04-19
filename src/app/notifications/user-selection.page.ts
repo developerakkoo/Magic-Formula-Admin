@@ -70,16 +70,23 @@ export class UserSelectionPage implements OnInit {
     this.isEditMode = state.isEditMode || false;
     this.notificationId = state.notificationId;
     
-    // Check if we're creating a new notification
+    // Check if we're creating a new notification or sending an existing draft
     this.isCreatingNotification = state.isCreatingNotification || false;
+    this.isSendingDraft = !!state.isSendingDraft && !!state.notificationId;
 
-    // Initialize notification form if creating
-    if (this.isCreatingNotification) {
+    // Initialize notification form if creating or sending draft
+    if (this.isCreatingNotification || this.isSendingDraft) {
       this.initializeNotificationForm();
+      if (this.isSendingDraft && state.notificationData) {
+        this.notificationForm.patchValue(state.notificationData);
+        this.notificationForm.disable(); // View only when sending draft
+      }
     }
 
     this.loadUsers();
   }
+
+  isSendingDraft = false;
 
   notificationData: any = null;
   isEditMode = false;
@@ -111,9 +118,10 @@ export class UserSelectionPage implements OnInit {
   }
 
   restoreSelection() {
-    // Match selected users by ID
-    this.selectedUsers = this.selectedUsers.filter(selected => {
-      return this.users.some(user => user._id === selected._id);
+    // Keep all selected users; refresh their data if they appear on current page
+    this.selectedUsers = this.selectedUsers.map(selected => {
+      const inPage = this.users.find(u => u._id === selected._id);
+      return inPage ?? selected;
     });
   }
 
@@ -183,15 +191,78 @@ export class UserSelectionPage implements OnInit {
     });
   }
 
+  async saveAsDraft() {
+    if (this.notificationForm.invalid) {
+      this.markFormGroupTouched(this.notificationForm);
+      this.presentToast('Please fill title and message to save as draft', 'warning');
+      return;
+    }
+
+    this.isSending = true;
+    const loading = await this.loadingController.create({
+      message: 'Saving draft...',
+      spinner: 'crescent'
+    });
+    await loading.present();
+
+    try {
+      const notificationData = {
+        title: this.notificationForm.value.title,
+        message: this.notificationForm.value.message,
+        type: this.notificationForm.value.type
+      };
+      await this.notificationService.createNotification(notificationData).toPromise();
+      await loading.dismiss();
+      this.isSending = false;
+      this.presentToast('Draft saved successfully', 'success');
+      this.router.navigate(['/notifications']);
+    } catch (error: any) {
+      await loading.dismiss();
+      this.isSending = false;
+      this.presentToast(error?.message || 'Failed to save draft', 'danger');
+      console.error('Error saving draft:', error);
+    }
+  }
+
   async createAndSendNotification() {
-    // Validate form
+    // Sending an existing draft: only need users and notificationId
+    if (this.isSendingDraft && this.notificationId) {
+      if (this.selectedUsers.length === 0) {
+        this.presentToast('Please select at least one user', 'warning');
+        return;
+      }
+      this.isSending = true;
+      const loading = await this.loadingController.create({
+        message: 'Sending notification...',
+        spinner: 'crescent'
+      });
+      await loading.present();
+      try {
+        const userIds = this.selectedUsers.map(u => u._id);
+        const sendResponse = await this.notificationService.sendNotificationToUsers({
+          notificationId: this.notificationId,
+          userIds,
+          sendTo: 'CUSTOM'
+        }).toPromise();
+        await loading.dismiss();
+        this.isSending = false;
+        this.presentToast(`Notification sent successfully to ${sendResponse?.sentCount || 0} user(s)`, 'success');
+        this.router.navigate(['/notifications']);
+      } catch (error: any) {
+        await loading.dismiss();
+        this.isSending = false;
+        this.presentToast(error?.message || 'Failed to send notification', 'danger');
+        console.error('Error sending notification:', error);
+      }
+      return;
+    }
+
+    // Create new and send
     if (this.notificationForm.invalid) {
       this.markFormGroupTouched(this.notificationForm);
       this.presentToast('Please fill all required fields correctly', 'warning');
       return;
     }
-
-    // Check if users are selected
     if (this.selectedUsers.length === 0) {
       this.presentToast('Please select at least one user', 'warning');
       return;
@@ -205,40 +276,29 @@ export class UserSelectionPage implements OnInit {
     await loading.present();
 
     try {
-      // Step 1: Create notification
       const notificationData = {
         title: this.notificationForm.value.title,
         message: this.notificationForm.value.message,
         type: this.notificationForm.value.type
       };
-
       const createdNotification = await this.notificationService.createNotification(notificationData).toPromise();
-      
       if (!createdNotification || !createdNotification._id) {
         throw new Error('Failed to create notification');
       }
-
-      // Step 2: Send notification to selected users
       const userIds = this.selectedUsers.map(u => u._id);
       const sendResponse = await this.notificationService.sendNotificationToUsers({
         notificationId: createdNotification._id,
-        userIds: userIds,
+        userIds,
         sendTo: 'CUSTOM'
       }).toPromise();
-
       await loading.dismiss();
       this.isSending = false;
-
-      // Show success message
       this.presentToast(`Notification sent successfully to ${sendResponse?.sentCount || 0} user(s)`, 'success');
-
-      // Navigate back to notifications list
       this.router.navigate(['/notifications']);
     } catch (error: any) {
       await loading.dismiss();
       this.isSending = false;
-      const errorMessage = error?.message || 'Failed to create and send notification';
-      this.presentToast(errorMessage, 'danger');
+      this.presentToast(error?.message || 'Failed to create and send notification', 'danger');
       console.error('Error creating and sending notification:', error);
     }
   }
@@ -251,8 +311,8 @@ export class UserSelectionPage implements OnInit {
   }
 
   confirmSelection() {
-    // If creating notification, use createAndSendNotification instead
-    if (this.isCreatingNotification) {
+    // If creating notification or sending draft, use createAndSendNotification
+    if (this.isCreatingNotification || this.isSendingDraft) {
       this.createAndSendNotification();
       return;
     }

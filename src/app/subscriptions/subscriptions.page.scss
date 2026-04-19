@@ -187,6 +187,16 @@
     letter-spacing: 0.5px;
   }
 
+  .starter-chip {
+    align-self: flex-start;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
   .status-badge {
     font-size: 11px;
     font-weight: 600;

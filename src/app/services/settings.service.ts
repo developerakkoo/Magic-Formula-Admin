@@ -16,6 +16,7 @@ export interface Settings {
   maintenanceMessage: string;
   enableWhatsAppNotifications: boolean;
   enableFirebaseNotifications: boolean;
+  starterOfferVisibleToUsers?: boolean;
   metadata?: any;
   createdAt?: Date | string;
   updatedAt?: Date | string;

@@ -135,6 +135,89 @@
   }
 }
 
+// Selected Users (always at top)
+.selected-users-section {
+  flex-shrink: 0;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e3e6ee;
+  box-shadow: 0 2px 8px rgba(15, 17, 21, 0.04);
+
+  .selected-users-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f1115;
+    margin: 0 0 12px 0;
+    letter-spacing: -0.1px;
+
+    ion-icon {
+      font-size: 18px;
+      color: #0f1115;
+    }
+  }
+
+  .selected-users-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .selected-user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(15, 17, 21, 0.08) 100%);
+    border: 1.5px solid #e3e6ee;
+    border-radius: 10px;
+    max-width: 280px;
+
+    .selected-user-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      flex: 1;
+
+      .selected-user-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f1115;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .selected-user-detail {
+        font-size: 12px;
+        color: #4c5160;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    ion-button {
+      --padding-start: 4px;
+      --padding-end: 4px;
+      margin: 0;
+      min-width: 32px;
+      height: 32px;
+
+      ion-icon {
+        font-size: 20px;
+        color: #4c5160;
+      }
+
+      &:hover ion-icon {
+        color: #c5000f;
+      }
+    }
+  }
+}
+
 // Selection Summary Bar
 .selection-summary-bar {
   display: flex;

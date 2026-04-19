@@ -158,47 +158,76 @@ export class BulkUploadModalComponent implements OnInit {
       : 'Upload an Excel file to create multiple user accounts';
   }
 
+  /**
+   * Download a blank client-generated template with the columns required by the API (ADMIN_BULK_WATI_API.md).
+   */
   downloadTemplate() {
     let worksheet: XLSX.WorkSheet;
     let workbook: XLSX.WorkBook;
     let filename: string;
 
     if (this.uploadType === 'users') {
-      // Bulk User Creation Template
+      // Bulk User Creation: Full Name, Email, WhatsApp, Password (Mobile optional; backend uses WhatsApp)
       const data = [
-        ['Full Name', 'Email', 'Mobile', 'WhatsApp'],
-        ['John Doe', 'john.doe@example.com', '1234567890', '1234567890'],
-        ['Jane Smith', 'jane.smith@example.com', '0987654321', '0987654321']
+        ['Full Name', 'Email', 'WhatsApp', 'Password'],
+        ['John Doe', 'john.doe@example.com', '1234567890', 'min8chars'],
+        ['Jane Smith', 'jane.smith@example.com', '0987654321', 'min8chars']
       ];
-      
       worksheet = XLSX.utils.aoa_to_sheet(data);
       filename = 'bulk-user-creation-template.xlsx';
     } else {
-      // Bulk Subscription Assignment Template
+      // Bulk Subscription: Email, Mobile (or WhatsApp), Plan Code
       const data = [
         ['Email', 'Mobile', 'Plan Code'],
         ['john.doe@example.com', '', 'PLAN001'],
         ['', '0987654321', 'PLAN002']
       ];
-      
       worksheet = XLSX.utils.aoa_to_sheet(data);
       filename = 'bulk-subscription-template.xlsx';
     }
 
-    // Set column widths for better readability
-    const colWidths = this.uploadType === 'users' 
-      ? [{ wch: 20 }, { wch: 30 }, { wch: 15 }, { wch: 15 }]
+    const colWidths = this.uploadType === 'users'
+      ? [{ wch: 20 }, { wch: 30 }, { wch: 15 }, { wch: 20 }]
       : [{ wch: 30 }, { wch: 15 }, { wch: 15 }];
     worksheet['!cols'] = colWidths;
 
-    // Create workbook and add worksheet
     workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Template');
-
-    // Generate Excel file and trigger download
     XLSX.writeFile(workbook, filename);
-    
     this.presentToast('Template downloaded successfully', 'success');
+  }
+
+  /**
+   * Download the server Excel template (export-users). Includes all columns: Full Name, Email, WhatsApp, Mobile, Password, etc.
+   * Use this as the template for both bulk create and bulk subscription.
+   */
+  async downloadServerTemplate() {
+    const loading = await this.loadingController.create({
+      message: 'Downloading template...',
+      spinner: 'crescent'
+    });
+    await loading.present();
+    try {
+      const blob = await this.usersService.exportUsers().toPromise();
+      if (blob && blob.size > 0) {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `users_bulk_template_${new Date().getTime()}.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        this.presentToast('Template downloaded. Fill Password for new users, Plan Code for subscriptions.', 'success');
+      } else {
+        this.presentToast('No data received', 'warning');
+      }
+    } catch (e: any) {
+      const msg = e?.error?.message || e?.message || 'Download failed';
+      this.presentToast(msg, 'danger');
+    } finally {
+      await loading.dismiss();
+    }
   }
 }
 

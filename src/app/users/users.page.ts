@@ -21,7 +21,7 @@ export class UsersPage implements OnInit {
   isLoading: boolean = false;
   selectedUsers: string[] = [];
   showDeviceConflicts: boolean = false;
-  deviceConflictUsers: User[] = [];
+  deviceConflictUsers: (User & { conflictType?: string; requestedAt?: Date | string })[] = [];
 
   constructor(
     private modalController: ModalController,
@@ -119,8 +119,16 @@ export class UsersPage implements OnInit {
             const expiryDate2 = user.planExpiry instanceof Date ? user.planExpiry : new Date(user.planExpiry);
             return expiryDate2 <= now;
           case 'live':
-            // Live users are active and not blocked
-            return !user.isBlocked && user.activePlan && user.planExpiry;
+            // Live users: active within last 30 minutes and not blocked
+            if (user.isBlocked) return false;
+            // Use lastActivity if available, otherwise fall back to lastDeviceLogin
+            const activityTime = user.lastActivity || user.lastDeviceLogin;
+            if (!activityTime) return false; // No activity history
+            const lastActivityDate = activityTime instanceof Date 
+              ? activityTime 
+              : new Date(activityTime);
+            const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+            return lastActivityDate >= thirtyMinutesAgo;
           default:
             return true;
         }
@@ -561,13 +569,19 @@ export class UsersPage implements OnInit {
               allConflictUsers.push({
                 ...user,
                 conflictType: conflict.conflictType,
-                deviceId: conflict.deviceId
+                deviceId: conflict.deviceId,
+                requestedAt: conflict.requestedAt // For DEVICE_CHANGE_REQUESTED type
               });
             });
           }
         });
         
-        this.deviceConflictUsers = allConflictUsers.map(user => this.mapConflictUser(user));
+        // Map users and preserve conflictType
+        this.deviceConflictUsers = allConflictUsers.map(user => ({
+          ...this.mapConflictUser(user),
+          conflictType: user.conflictType,
+          requestedAt: user.requestedAt
+        }));
       } else {
         this.deviceConflictUsers = [];
       }
@@ -589,10 +603,28 @@ export class UsersPage implements OnInit {
       lastDeviceLogin: user.lastDeviceLogin ? new Date(user.lastDeviceLogin) : undefined,
       isBlocked: user.isBlocked || false,
       activePlan: user.activePlan,
+      deviceChangeRequested: user.deviceChangeRequested || false,
+      deviceChangeRequestedAt: user.deviceChangeRequestedAt ? new Date(user.deviceChangeRequestedAt) : undefined,
       planExpiry: user.planExpiry ? new Date(user.planExpiry) : undefined,
       createdAt: user.createdAt ? new Date(user.createdAt) : undefined,
       updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined
     };
+  }
+
+  /**
+   * Get conflict type badge info for display
+   */
+  getConflictTypeBadge(conflictType: string): { text: string; color: string } {
+    switch (conflictType) {
+      case 'DEVICE_CHANGE_REQUESTED':
+        return { text: 'Device Change Request', color: 'warning' };
+      case 'MULTIPLE_USERS':
+        return { text: 'Multiple Users', color: 'danger' };
+      case 'ABANDONED_DEVICE':
+        return { text: 'Abandoned Device', color: 'medium' };
+      default:
+        return { text: 'Conflict', color: 'medium' };
+    }
   }
 
   async allowNewDevice(userId: string) {
@@ -605,6 +637,10 @@ export class UsersPage implements OnInit {
       await this.usersService.allowNewDevice(userId).toPromise();
       this.presentToast('New device access granted', 'success');
       this.loadUsers();
+      // Refresh device conflicts if showing
+      if (this.showDeviceConflicts) {
+        await this.loadDeviceConflicts();
+      }
     } catch (error) {
       this.presentToast('Failed to allow new device', 'danger');
     } finally {
@@ -640,5 +676,20 @@ export class UsersPage implements OnInit {
     }
     const expiryDate = user.planExpiry instanceof Date ? user.planExpiry : new Date(user.planExpiry);
     return expiryDate > new Date();
+  }
+
+  /**
+   * Check if user is currently live (active within last 30 minutes)
+   */
+  isUserLive(user: User): boolean {
+    if (user.isBlocked) return false;
+    // Use lastActivity if available, otherwise fall back to lastDeviceLogin
+    const activityTime = user.lastActivity || user.lastDeviceLogin;
+    if (!activityTime) return false;
+    const lastActivityDate = activityTime instanceof Date 
+      ? activityTime 
+      : new Date(activityTime);
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    return lastActivityDate >= thirtyMinutesAgo;
   }
 }

@@ -153,7 +153,7 @@ export class SubscriptionsPage implements OnInit, OnDestroy {
   async addSubscription() {
     const modal = await this.modalController.create({
       component: PlanFormModalComponent,
-      componentProps: {}
+      componentProps: { existingPlans: [...this.plans] }
     });
 
     modal.onDidDismiss().then((data) => {
@@ -180,7 +180,7 @@ export class SubscriptionsPage implements OnInit, OnDestroy {
 
     const modal = await this.modalController.create({
       component: PlanFormModalComponent,
-      componentProps: { plan: planCopy }
+      componentProps: { plan: planCopy, existingPlans: [...this.plans] }
     });
 
     modal.onDidDismiss().then((data) => {

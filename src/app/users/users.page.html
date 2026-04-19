@@ -205,9 +205,19 @@
               <td>{{ user.mobile || 'N/A' }}</td>
               <td>{{ user.whatsapp || 'N/A' }}</td>
               <td>
-                <ion-badge [color]="getStatusBadge(user).color">
-                  {{ getStatusBadge(user).text }}
-                </ion-badge>
+                <div class="d-flex align-items-center gap-2">
+                  <ion-badge [color]="getStatusBadge(user).color">
+                    {{ getStatusBadge(user).text }}
+                  </ion-badge>
+                  <ion-badge 
+                    *ngIf="isUserLive(user)" 
+                    color="success" 
+                    class="live-badge"
+                    title="User is currently active">
+                    <ion-icon name="radio-button-on" style="font-size: 8px; margin-right: 4px;"></ion-icon>
+                    Live
+                  </ion-badge>
+                </div>
               </td>
               <td>
                 <span *ngIf="isPlanActive(user)">
@@ -337,12 +347,19 @@
         <p>Users blocked for attempting to login from a new device</p>
       </div>
       <div class="conflicts-list">
-        <div class="conflict-card" *ngFor="let user of deviceConflictUsers">
+        <div class="conflict-card" *ngFor="let user of deviceConflictUsers" [ngClass]="{'device-change-request': user.conflictType === 'DEVICE_CHANGE_REQUESTED'}">
           <div class="conflict-info">
-            <h4>{{ user.fullName || user.email || user.mobile }}</h4>
-            <p>Device ID: {{ user.deviceId || 'Unknown' }}</p>
+            <div class="conflict-header">
+              <h4>{{ user.fullName || user.email || user.mobile }}</h4>
+              <ion-badge *ngIf="user.conflictType" [color]="getConflictTypeBadge(user.conflictType).color">
+                {{ getConflictTypeBadge(user.conflictType).text }}
+              </ion-badge>
+            </div>
+            <p *ngIf="user.deviceId">Device ID: {{ user.deviceId }}</p>
+            <p *ngIf="!user.deviceId && user.conflictType === 'DEVICE_CHANGE_REQUESTED'">Device ID: Not set (request pending)</p>
             <p>Last Login: {{ user.lastDeviceLogin ? (user.lastDeviceLogin | date:'medium') : 'Never' }}</p>
-            <p>Login Attempts: {{ user.loginAttempts || 0 }}</p>
+            <p *ngIf="user.deviceChangeRequestedAt">Requested At: {{ user.deviceChangeRequestedAt | date:'medium' }}</p>
+            <p *ngIf="user.loginAttempts">Login Attempts: {{ user.loginAttempts }}</p>
           </div>
           <div class="conflict-actions">
             <ion-button fill="outline" size="small" color="success" (click)="allowNewDevice(user._id!)">

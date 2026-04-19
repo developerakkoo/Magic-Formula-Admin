@@ -207,6 +207,16 @@
   }
 }
 
+.toggle-item ion-label .hint-muted {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: #7a8194;
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.45;
+}
+
 // Footer
 ion-footer {
   ion-toolbar {
