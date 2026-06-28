@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { ModalController, ToastController, LoadingController } from '@ionic/angular';
 import { UsersService } from './users.service';
+import { generateSecurePassword } from '../utils/secure-password';
 import * as XLSX from 'xlsx';
 
 @Component({
@@ -10,7 +11,7 @@ import * as XLSX from 'xlsx';
   standalone: false
 })
 export class BulkUploadModalComponent implements OnInit {
-  @Input() uploadType: 'subscriptions' | 'users' = 'users';
+  @Input() uploadType: 'subscriptions' | 'remove-subscriptions' | 'users' = 'users';
   selectedFile: File | null = null;
   uploadProgress: number = 0;
   isUploading: boolean = false;
@@ -68,8 +69,14 @@ export class BulkUploadModalComponent implements OnInit {
     }
 
     this.isUploading = true;
+    const loadingMessage =
+      this.uploadType === 'subscriptions'
+        ? 'subscriptions'
+        : this.uploadType === 'remove-subscriptions'
+          ? 'subscription removals'
+          : 'users';
     const loading = await this.loadingController.create({
-      message: `Uploading ${this.uploadType === 'subscriptions' ? 'subscriptions' : 'users'}...`
+      message: `Uploading ${loadingMessage}...`
     });
     await loading.present();
 
@@ -77,6 +84,8 @@ export class BulkUploadModalComponent implements OnInit {
       let response: any;
       if (this.uploadType === 'subscriptions') {
         response = await this.usersService.bulkUploadSubscriptions(this.selectedFile!).toPromise();
+      } else if (this.uploadType === 'remove-subscriptions') {
+        response = await this.usersService.bulkRemoveSubscriptions(this.selectedFile!).toPromise();
       } else {
         response = await this.usersService.bulkCreateUsers(this.selectedFile!).toPromise();
       }
@@ -87,16 +96,23 @@ export class BulkUploadModalComponent implements OnInit {
       
       // Show summary toast
       const summary = response.summary || {};
-      if (this.uploadType === 'subscriptions') {
+      if (this.uploadType === 'subscriptions' || this.uploadType === 'remove-subscriptions') {
         const successCount = summary.successCount || 0;
         const failedCount = summary.failedCount || 0;
+        const action =
+          this.uploadType === 'remove-subscriptions' ? 'removed' : 'assigned';
         if (successCount > 0) {
           this.presentToast(
-            `Successfully assigned ${successCount} subscription(s)${failedCount > 0 ? `, ${failedCount} failed` : ''}`,
+            `Successfully ${action} ${successCount} subscription(s)${failedCount > 0 ? `, ${failedCount} failed` : ''}`,
             failedCount > 0 ? 'warning' : 'success'
           );
         } else {
-          this.presentToast('No subscriptions were assigned. Check failed rows for details.', 'warning');
+          this.presentToast(
+            this.uploadType === 'remove-subscriptions'
+              ? 'No subscriptions were removed. Check failed rows for details.'
+              : 'No subscriptions were assigned. Check failed rows for details.',
+            'warning'
+          );
         }
       } else {
         const created = summary.created || 0;
@@ -149,13 +165,23 @@ export class BulkUploadModalComponent implements OnInit {
   }
 
   getUploadTypeLabel(): string {
-    return this.uploadType === 'subscriptions' ? 'Bulk Subscription Access' : 'Bulk User Creation';
+    if (this.uploadType === 'subscriptions') return 'Bulk Subscription Access';
+    if (this.uploadType === 'remove-subscriptions') return 'Bulk Remove Subscriptions';
+    return 'Bulk User Creation';
   }
 
   getUploadDescription(): string {
-    return this.uploadType === 'subscriptions'
-      ? 'Upload an Excel file to grant subscription access to multiple users'
-      : 'Upload an Excel file to create multiple user accounts';
+    if (this.uploadType === 'subscriptions') {
+      return 'Upload an Excel file to grant subscription access to multiple users';
+    }
+    if (this.uploadType === 'remove-subscriptions') {
+      return 'Upload an Excel file to remove active subscriptions from multiple users';
+    }
+    return 'Upload an Excel file to create multiple user accounts';
+  }
+
+  isSubscriptionUpload(): boolean {
+    return this.uploadType === 'subscriptions' || this.uploadType === 'remove-subscriptions';
   }
 
   /**
@@ -167,14 +193,22 @@ export class BulkUploadModalComponent implements OnInit {
     let filename: string;
 
     if (this.uploadType === 'users') {
-      // Bulk User Creation: Full Name, Email, WhatsApp, Password (Mobile optional; backend uses WhatsApp)
+      // Bulk User Creation: Full Name, Email, WhatsApp, Password (unique generated samples per row)
       const data = [
         ['Full Name', 'Email', 'WhatsApp', 'Password'],
-        ['John Doe', 'john.doe@example.com', '1234567890', 'min8chars'],
-        ['Jane Smith', 'jane.smith@example.com', '0987654321', 'min8chars']
+        ['John Doe', 'john.doe@example.com', '1234567890', generateSecurePassword()],
+        ['Jane Smith', 'jane.smith@example.com', '0987654321', generateSecurePassword()]
       ];
       worksheet = XLSX.utils.aoa_to_sheet(data);
       filename = 'bulk-user-creation-template.xlsx';
+    } else if (this.uploadType === 'remove-subscriptions') {
+      const data = [
+        ['Email', 'Mobile'],
+        ['john.doe@example.com', ''],
+        ['', '0987654321']
+      ];
+      worksheet = XLSX.utils.aoa_to_sheet(data);
+      filename = 'bulk-remove-subscription-template.xlsx';
     } else {
       // Bulk Subscription: Email, Mobile (or WhatsApp), Plan Code
       const data = [
@@ -186,9 +220,12 @@ export class BulkUploadModalComponent implements OnInit {
       filename = 'bulk-subscription-template.xlsx';
     }
 
-    const colWidths = this.uploadType === 'users'
-      ? [{ wch: 20 }, { wch: 30 }, { wch: 15 }, { wch: 20 }]
-      : [{ wch: 30 }, { wch: 15 }, { wch: 15 }];
+    const colWidths =
+      this.uploadType === 'users'
+        ? [{ wch: 20 }, { wch: 30 }, { wch: 15 }, { wch: 20 }]
+        : this.uploadType === 'remove-subscriptions'
+          ? [{ wch: 30 }, { wch: 15 }]
+          : [{ wch: 30 }, { wch: 15 }, { wch: 15 }];
     worksheet['!cols'] = colWidths;
 
     workbook = XLSX.utils.book_new();

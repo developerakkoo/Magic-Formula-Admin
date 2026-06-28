@@ -157,6 +157,59 @@ export class UserDetailsModalComponent implements OnInit {
     return expiryDate > new Date();
   }
 
+  async approveRegistration() {
+    if (!this.user?._id) return;
+    const loading = await this.loadingController.create({ message: 'Approving registration...' });
+    await loading.present();
+    try {
+      await firstValueFrom(this.usersService.approveRegistration(this.user._id));
+      this.presentToast('Registration approved', 'success');
+      this.modalController.dismiss({ refresh: true });
+    } catch (error: any) {
+      this.presentToast(error?.message || 'Failed to approve registration', 'danger');
+    } finally {
+      await loading.dismiss();
+    }
+  }
+
+  async rejectRegistration() {
+    if (!this.user?._id) return;
+
+    const alert = await this.alertController.create({
+      header: 'Reject Registration',
+      inputs: [
+        {
+          name: 'reason',
+          type: 'textarea',
+          placeholder: 'Rejection reason (optional)'
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Reject',
+          role: 'destructive',
+          handler: async (data) => {
+            const loading = await this.loadingController.create({ message: 'Rejecting registration...' });
+            await loading.present();
+            try {
+              await firstValueFrom(
+                this.usersService.rejectRegistration(this.user._id!, data?.reason)
+              );
+              this.presentToast('Registration rejected', 'success');
+              this.modalController.dismiss({ refresh: true });
+            } catch (error: any) {
+              this.presentToast(error?.message || 'Failed to reject registration', 'danger');
+            } finally {
+              await loading.dismiss();
+            }
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
   async presentToast(message: string, color: string) {
     const toast = await this.toastController.create({
       message,

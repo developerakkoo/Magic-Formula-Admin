@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ModalController, ToastController, LoadingController, AlertController } from '@ionic/angular';
-import { UsersService, User } from './users.service';
+import { UsersService, User, UserListStatus } from './users.service';
 import { UserFormModalComponent } from './user-form.modal';
 import { BulkUploadModalComponent } from './bulk-upload.modal';
 import { UserDetailsModalComponent } from './user-details.modal';
@@ -11,17 +11,19 @@ import { UserDetailsModalComponent } from './user-details.modal';
   styleUrls: ['./users.page.scss'],
   standalone: false
 })
-export class UsersPage implements OnInit {
+export class UsersPage implements OnInit, OnDestroy {
   users: User[] = [];
   filteredUsers: User[] = [];
   searchQuery: string = '';
   sortField: string = 'createdAt';
   sortDirection: 'asc' | 'desc' = 'desc';
-  filterStatus: 'all' | 'live' | 'subscribed' | 'unsubscribed' = 'all';
+  filterStatus: UserListStatus = 'all';
   isLoading: boolean = false;
   selectedUsers: string[] = [];
   showDeviceConflicts: boolean = false;
+  showPendingRegistrations: boolean = false;
   deviceConflictUsers: (User & { conflictType?: string; requestedAt?: Date | string })[] = [];
+  private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private modalController: ModalController,
@@ -39,12 +41,25 @@ export class UsersPage implements OnInit {
     this.loadUsers();
   }
 
+  ngOnDestroy() {
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+  }
+
+  private mapSortFieldToApi(field: string): string {
+    if (field === 'name') return 'fullName';
+    if (field === 'status') return 'createdAt';
+    return field;
+  }
+
   async loadUsers() {
     this.isLoading = true;
     try {
       const response = await this.usersService.getAllUsers({
-        filter: this.filterStatus,
-        sort: this.sortField,
+        search: this.searchQuery.trim() || undefined,
+        status: this.filterStatus,
+        sortBy: this.mapSortFieldToApi(this.sortField),
         order: this.sortDirection
       }).toPromise();
       
@@ -95,93 +110,41 @@ export class UsersPage implements OnInit {
   applyFilters() {
     let result = [...this.users];
 
-    // Apply search filter
-    if (this.searchQuery.trim()) {
-      const query = this.searchQuery.toLowerCase();
-      result = result.filter(user => 
-        (user.fullName?.toLowerCase().includes(query)) ||
-        (user.email?.toLowerCase().includes(query)) ||
-        (user.mobile?.includes(query))
-      );
-    }
-
-    // Apply status filter
-    if (this.filterStatus !== 'all') {
-      const now = new Date();
-      result = result.filter(user => {
-        switch (this.filterStatus) {
-          case 'subscribed':
-            if (!user.activePlan || !user.planExpiry) return false;
-            const expiryDate = user.planExpiry instanceof Date ? user.planExpiry : new Date(user.planExpiry);
-            return expiryDate > now;
-          case 'unsubscribed':
-            if (!user.activePlan || !user.planExpiry) return true;
-            const expiryDate2 = user.planExpiry instanceof Date ? user.planExpiry : new Date(user.planExpiry);
-            return expiryDate2 <= now;
-          case 'live':
-            // Live users: active within last 30 minutes and not blocked
-            if (user.isBlocked) return false;
-            // Use lastActivity if available, otherwise fall back to lastDeviceLogin
-            const activityTime = user.lastActivity || user.lastDeviceLogin;
-            if (!activityTime) return false; // No activity history
-            const lastActivityDate = activityTime instanceof Date 
-              ? activityTime 
-              : new Date(activityTime);
-            const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-            return lastActivityDate >= thirtyMinutesAgo;
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Apply device conflicts filter
     if (this.showDeviceConflicts) {
       result = result.filter(user => user.isDeviceBlocked === true);
       this.deviceConflictUsers = result;
     }
 
-    // Apply sorting
-    result.sort((a, b) => {
-      let aVal: any;
-      let bVal: any;
+    if (this.showPendingRegistrations) {
+      result = result.filter(
+        user => user.registrationStatus === 'pending' && user.passwordSet === true
+      );
+    }
 
-      switch (this.sortField) {
-        case 'name':
-          aVal = a.fullName || '';
-          bVal = b.fullName || '';
-          break;
-        case 'email':
-          aVal = a.email || '';
-          bVal = b.email || '';
-          break;
-        case 'status':
-          aVal = a.isBlocked ? 'blocked' : (a.activePlan ? 'subscribed' : 'unsubscribed');
-          bVal = b.isBlocked ? 'blocked' : (b.activePlan ? 'subscribed' : 'unsubscribed');
-          break;
-        case 'createdAt':
-        default:
-          const aDate = a.createdAt instanceof Date ? a.createdAt : (a.createdAt ? new Date(a.createdAt) : null);
-          const bDate = b.createdAt instanceof Date ? b.createdAt : (b.createdAt ? new Date(b.createdAt) : null);
-          aVal = aDate ? aDate.getTime() : 0;
-          bVal = bDate ? bDate.getTime() : 0;
-          break;
-      }
-
-      if (aVal < bVal) return this.sortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return this.sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
+    if (this.sortField === 'status') {
+      result.sort((a, b) => {
+        const aVal = a.isBlocked ? 'blocked' : (a.hasActivePlan || this.isPlanActive(a) ? 'subscribed' : 'unsubscribed');
+        const bVal = b.isBlocked ? 'blocked' : (b.hasActivePlan || this.isPlanActive(b) ? 'subscribed' : 'unsubscribed');
+        if (aVal < bVal) return this.sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return this.sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
 
     this.filteredUsers = result;
   }
 
   onSearch() {
-    this.applyFilters();
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+    this.searchDebounceTimer = setTimeout(() => {
+      this.loadUsers();
+    }, 300);
   }
 
   onFilterChange() {
-    this.applyFilters();
+    this.loadUsers();
   }
 
   onSort(field: string) {
@@ -191,7 +154,11 @@ export class UsersPage implements OnInit {
       this.sortField = field;
       this.sortDirection = 'asc';
     }
-    this.applyFilters();
+    if (field === 'status') {
+      this.applyFilters();
+    } else {
+      this.loadUsers();
+    }
   }
 
   toggleUserSelection(userId: string) {
@@ -497,7 +464,7 @@ export class UsersPage implements OnInit {
     await alert.present();
   }
 
-  async openBulkUpload(type: 'subscriptions' | 'users') {
+  async openBulkUpload(type: 'subscriptions' | 'remove-subscriptions' | 'users') {
     const modal = await this.modalController.create({
       component: BulkUploadModalComponent,
       componentProps: { uploadType: type }
@@ -661,6 +628,12 @@ export class UsersPage implements OnInit {
     if (user.isBlocked) {
       return { text: 'Blocked', color: 'danger' };
     }
+    if (user.registrationStatus === 'pending' && user.passwordSet) {
+      return { text: 'Pending Approval', color: 'warning' };
+    }
+    if (user.registrationStatus === 'rejected') {
+      return { text: 'Rejected', color: 'danger' };
+    }
     if (user.isDeviceBlocked) {
       return { text: 'Device Blocked', color: 'warning' };
     }
@@ -670,7 +643,71 @@ export class UsersPage implements OnInit {
     return { text: 'Unsubscribed', color: 'medium' };
   }
 
+  isPendingRegistration(user: User): boolean {
+    return user.registrationStatus === 'pending' && user.passwordSet === true;
+  }
+
+  async approveRegistration(user: User) {
+    if (!user._id) return;
+    const loading = await this.loadingController.create({ message: 'Approving registration...' });
+    await loading.present();
+    try {
+      await this.usersService.approveRegistration(user._id).toPromise();
+      this.presentToast('Registration approved', 'success');
+      this.loadUsers();
+    } catch (error: any) {
+      this.presentToast(error?.message || 'Failed to approve registration', 'danger');
+    } finally {
+      await loading.dismiss();
+    }
+  }
+
+  async rejectRegistration(user: User) {
+    if (!user._id) return;
+
+    const alert = await this.alertController.create({
+      header: 'Reject Registration',
+      message: 'Optionally provide a reason (included in rejection email when configured).',
+      inputs: [
+        {
+          name: 'reason',
+          type: 'textarea',
+          placeholder: 'Rejection reason (optional)'
+        }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Reject',
+          role: 'destructive',
+          handler: async (data) => {
+            const loading = await this.loadingController.create({ message: 'Rejecting registration...' });
+            await loading.present();
+            try {
+              await this.usersService.rejectRegistration(user._id!, data?.reason).toPromise();
+              this.presentToast('Registration rejected', 'success');
+              this.loadUsers();
+            } catch (error: any) {
+              this.presentToast(error?.message || 'Failed to reject registration', 'danger');
+            } finally {
+              await loading.dismiss();
+            }
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  togglePendingRegistrations() {
+    this.showPendingRegistrations = !this.showPendingRegistrations;
+    this.applyFilters();
+  }
+
   isPlanActive(user: User): boolean {
+    if (user.hasActivePlan !== undefined) {
+      return user.hasActivePlan;
+    }
     if (!user.activePlan || !user.planExpiry) {
       return false;
     }

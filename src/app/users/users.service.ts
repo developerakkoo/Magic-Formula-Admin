@@ -25,10 +25,33 @@ export interface User {
   isDeviceBlocked?: boolean;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  /** Admin GET/PATCH only: whether the account has a bcrypt password (plaintext never returned). */
+  passwordSet?: boolean;
+  /** Derived from active UserSubscription when listing users. */
+  hasActivePlan?: boolean;
+  registrationStatus?: 'pending' | 'approved' | 'rejected';
+  registrationSubmittedAt?: Date | string;
+  registrationReviewedAt?: Date | string;
+  rejectionReason?: string;
+}
+
+export type UserListStatus = 'all' | 'blocked' | 'subscribed' | 'unsubscribed' | 'live' | 'pending' | 'rejected';
+
+export interface UserListParams {
+  search?: string;
+  status?: UserListStatus;
+  sortBy?: string;
+  order?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
 }
 
 export interface UsersResponse {
+  success?: boolean;
   count: number;
+  page?: number;
+  totalPages?: number;
+  limit?: number | null;
   users: User[];
 }
 
@@ -36,6 +59,25 @@ export interface UserResponse {
   success: boolean;
   message?: string;
   data: User;
+}
+
+/** Body for POST /api/admin/users (single create). Password is required; never returned on GET. */
+export interface AdminCreateUserRequest {
+  fullName?: string;
+  email: string;
+  mobile: string;
+  whatsapp?: string;
+  password: string;
+}
+
+/** Body for PATCH /api/admin/users/:id. Include `password` only to set a new password (write-only). */
+export interface AdminUpdateUserRequest {
+  fullName?: string;
+  email?: string;
+  whatsapp?: string;
+  profilePic?: string;
+  firebaseToken?: string;
+  password?: string;
 }
 
 /** Response from POST /api/admin/bulk-create-users (see ADMIN_BULK_WATI_API.md) */
@@ -55,6 +97,14 @@ export interface BulkSubscriptionResponse {
   failed: Array<{ rowNumber: number; email?: string; mobile?: string; planCode?: string; reason: string }>;
 }
 
+/** Response from POST /api/admin/bulk-remove-subscription (see ADMIN_BULK_WATI_API.md) */
+export interface BulkRemoveSubscriptionResponse {
+  message: string;
+  summary: { totalRows: number; successCount: number; failedCount: number };
+  success: Array<{ rowNumber: number; userId?: string; email?: string; mobile?: string; removedSubscriptionId?: string; planId?: string }>;
+  failed: Array<{ rowNumber: number; email?: string; mobile?: string; reason: string }>;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -68,20 +118,29 @@ export class UsersService {
   ) {}
 
   /**
-   * Get all users
+   * Get all users with optional search, status filter, and sort (GET /api/admin/users).
    */
-  getAllUsers(params?: { filter?: string; sort?: string; order?: string }): Observable<UsersResponse> {
+  getAllUsers(params?: UserListParams): Observable<UsersResponse> {
     let httpParams = new HttpParams();
-    if (params?.filter) {
-      httpParams = httpParams.set('filter', params.filter);
+    if (params?.search?.trim()) {
+      httpParams = httpParams.set('search', params.search.trim());
     }
-    if (params?.sort) {
-      httpParams = httpParams.set('sort', params.sort);
+    if (params?.status && params.status !== 'all') {
+      httpParams = httpParams.set('status', params.status);
+    }
+    if (params?.sortBy) {
+      httpParams = httpParams.set('sortBy', params.sortBy);
     }
     if (params?.order) {
       httpParams = httpParams.set('order', params.order);
     }
-    
+    if (params?.page !== undefined) {
+      httpParams = httpParams.set('page', params.page.toString());
+    }
+    if (params?.limit !== undefined) {
+      httpParams = httpParams.set('limit', params.limit.toString());
+    }
+
     return this.http.get<UsersResponse>(`${this.apiUrl}/users`, { params: httpParams }).pipe(
       map(response => ({
         ...response,
@@ -108,7 +167,7 @@ export class UsersService {
   /**
    * Create new user
    */
-  createUser(userData: Partial<User>): Observable<User> {
+  createUser(userData: AdminCreateUserRequest): Observable<User> {
     return this.http.post<UserResponse>(`${this.apiUrl}/users`, userData).pipe(
       map(response => this.mapUserDates(response.data)),
       catchError(error => {
@@ -120,7 +179,7 @@ export class UsersService {
   /**
    * Update user
    */
-  updateUser(id: string, userData: Partial<User>): Observable<User> {
+  updateUser(id: string, userData: AdminUpdateUserRequest): Observable<User> {
     return this.http.patch<UserResponse>(`${this.apiUrl}/users/${id}`, userData).pipe(
       map(response => this.mapUserDates(response.data)),
       catchError(error => {
@@ -156,6 +215,22 @@ export class UsersService {
    */
   unblockUser(id: string): Observable<any> {
     return this.http.patch(`${this.apiUrl}/unblock/${id}`, {}).pipe(
+      catchError(error => {
+        return throwError(() => this.handleError(error));
+      })
+    );
+  }
+
+  approveRegistration(id: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/users/${id}/approve`, {}).pipe(
+      catchError(error => {
+        return throwError(() => this.handleError(error));
+      })
+    );
+  }
+
+  rejectRegistration(id: string, reason?: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/users/${id}/reject`, { reason }).pipe(
       catchError(error => {
         return throwError(() => this.handleError(error));
       })
@@ -207,6 +282,19 @@ export class UsersService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<BulkSubscriptionResponse>(`${this.apiUrl}/bulk-subscription`, formData).pipe(
+      catchError(error => {
+        return throwError(() => this.handleError(error));
+      })
+    );
+  }
+
+  /**
+   * Bulk remove active subscriptions (Excel: Email and/or Mobile). See ADMIN_BULK_WATI_API.md.
+   */
+  bulkRemoveSubscriptions(file: File): Observable<BulkRemoveSubscriptionResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<BulkRemoveSubscriptionResponse>(`${this.apiUrl}/bulk-remove-subscription`, formData).pipe(
       catchError(error => {
         return throwError(() => this.handleError(error));
       })

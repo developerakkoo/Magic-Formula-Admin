@@ -22,6 +22,47 @@
       <ion-badge [color]="user.isBlocked ? 'danger' : 'success'">
         {{ user.isBlocked ? 'Blocked' : 'Active' }}
       </ion-badge>
+      <ion-badge *ngIf="user.registrationStatus === 'pending'" color="warning" class="ion-margin-start">
+        Pending Approval
+      </ion-badge>
+      <ion-badge *ngIf="user.registrationStatus === 'rejected'" color="danger" class="ion-margin-start">
+        Rejected
+      </ion-badge>
+    </div>
+
+    <!-- Registration Approval -->
+    <div class="info-section" *ngIf="user.registrationStatus === 'pending' || user.registrationStatus === 'rejected'">
+      <h3>Registration</h3>
+      <ion-list>
+        <ion-item>
+          <ion-label>
+            <h4>Status</h4>
+            <p>{{ user.registrationStatus | titlecase }}</p>
+          </ion-label>
+        </ion-item>
+        <ion-item *ngIf="user.registrationSubmittedAt">
+          <ion-label>
+            <h4>Submitted</h4>
+            <p>{{ user.registrationSubmittedAt | date:'medium' }}</p>
+          </ion-label>
+        </ion-item>
+        <ion-item *ngIf="user.rejectionReason">
+          <ion-label>
+            <h4>Rejection Reason</h4>
+            <p>{{ user.rejectionReason }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+      <div class="modal-actions" *ngIf="user.registrationStatus === 'pending' && user.passwordSet">
+        <ion-button expand="block" color="success" (click)="approveRegistration()">
+          <ion-icon slot="start" name="checkmark-done-outline"></ion-icon>
+          Approve Registration
+        </ion-button>
+        <ion-button expand="block" color="danger" fill="outline" (click)="rejectRegistration()">
+          <ion-icon slot="start" name="close-circle-outline"></ion-icon>
+          Reject Registration
+        </ion-button>
+      </div>
     </div>
 
     <!-- User Information -->

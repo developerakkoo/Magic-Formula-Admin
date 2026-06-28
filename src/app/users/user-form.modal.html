@@ -50,6 +50,103 @@
         <ion-input formControlName="whatsapp" placeholder="+919876543210"></ion-input>
       </ion-item>
 
+      <ng-container *ngIf="isEditMode">
+        <ion-item lines="none">
+          <ion-text color="medium" class="ion-text-wrap">
+            <small><strong>Login password</strong>: The current password cannot be displayed (stored as a secure hash). {{
+              user?.passwordSet === true ? 'A password is set on this account.'
+              : user?.passwordSet === false ? 'No password on file — set one below so the user can sign in with email.'
+              : 'Password status unknown until API refresh — you can still set a new password below.'
+            }}</small>
+          </ion-text>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-text color="medium" class="ion-text-wrap">
+            <small>To change it, enter and confirm a new password below, or leave both blank to keep the existing password.</small>
+          </ion-text>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">New password</ion-label>
+          <ion-input
+            [type]="obscurePassword ? 'password' : 'text'"
+            formControlName="editPassword"
+            autocomplete="new-password">
+          </ion-input>
+          <ion-button slot="end" fill="clear" type="button" (click)="togglePasswordVisibility()" [attr.aria-label]="obscurePassword ? 'Show password' : 'Hide password'">
+            <ion-icon [name]="obscurePassword ? 'eye-outline' : 'eye-off-outline'"></ion-icon>
+          </ion-button>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Confirm new password</ion-label>
+          <ion-input
+            [type]="obscurePassword ? 'password' : 'text'"
+            formControlName="editConfirmPassword"
+            autocomplete="new-password">
+          </ion-input>
+        </ion-item>
+
+        <ion-item *ngIf="userForm.errors?.['editPasswordIncomplete'] && (userForm.get('editPassword')?.touched || userForm.get('editConfirmPassword')?.touched)">
+          <ion-text color="danger">Enter both new password fields</ion-text>
+        </ion-item>
+        <ion-item *ngIf="userForm.errors?.['editPasswordTooShort'] && userForm.get('editPassword')?.touched">
+          <ion-text color="danger">New password must be at least 8 characters</ion-text>
+        </ion-item>
+        <ion-item *ngIf="userForm.errors?.['editPasswordMismatch'] && userForm.get('editConfirmPassword')?.touched">
+          <ion-text color="danger">New passwords do not match</ion-text>
+        </ion-item>
+
+        <ion-item lines="none">
+          <ion-button expand="block" fill="outline" type="button" size="small" (click)="regenerateEditPassword()">
+            <ion-icon slot="start" name="refresh-outline"></ion-icon>
+            Generate password
+          </ion-button>
+        </ion-item>
+      </ng-container>
+
+      <ng-container *ngIf="!isEditMode">
+        <ion-item lines="none" class="password-hint">
+          <ion-text color="medium" class="ion-text-wrap">
+            <small>Communicate this password to the user securely; it will not be shown again after you close this dialog.</small>
+          </ion-text>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Password <ion-text color="danger">*</ion-text></ion-label>
+          <ion-input
+            [type]="obscurePassword ? 'password' : 'text'"
+            formControlName="password"
+            autocomplete="new-password">
+          </ion-input>
+          <ion-button slot="end" fill="clear" type="button" (click)="togglePasswordVisibility()" [attr.aria-label]="obscurePassword ? 'Show password' : 'Hide password'">
+            <ion-icon [name]="obscurePassword ? 'eye-outline' : 'eye-off-outline'"></ion-icon>
+          </ion-button>
+        </ion-item>
+        <ion-item *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched">
+          <ion-text color="danger">Password must be at least 8 characters</ion-text>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Confirm password <ion-text color="danger">*</ion-text></ion-label>
+          <ion-input
+            [type]="obscurePassword ? 'password' : 'text'"
+            formControlName="confirmPassword"
+            autocomplete="new-password">
+          </ion-input>
+        </ion-item>
+        <ion-item *ngIf="userForm.errors?.['passwordMismatch'] && userForm.get('confirmPassword')?.touched">
+          <ion-text color="danger">Passwords do not match</ion-text>
+        </ion-item>
+
+        <ion-item lines="none">
+          <ion-button expand="block" fill="outline" type="button" size="small" (click)="regeneratePassword()">
+            <ion-icon slot="start" name="refresh-outline"></ion-icon>
+            Regenerate password
+          </ion-button>
+        </ion-item>
+      </ng-container>
+
       <ion-item *ngIf="!isEditMode">
         <ion-label position="stacked">Assign Subscription Plan (Optional)</ion-label>
         <ion-select formControlName="assignPlan" placeholder="Select a plan">

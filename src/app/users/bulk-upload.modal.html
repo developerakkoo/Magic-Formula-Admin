@@ -19,6 +19,7 @@
       <p class="note">Supported formats: .xlsx, .xls (Max size: 5MB)</p>
       <p class="note" *ngIf="uploadType === 'users'">Columns: Full Name, Email, WhatsApp, Password (min 8 chars). WATI invite is sent per created user.</p>
       <p class="note" *ngIf="uploadType === 'subscriptions'">Columns: Email, Mobile (or WhatsApp), Plan Code.</p>
+      <p class="note" *ngIf="uploadType === 'remove-subscriptions'">Columns: Email and/or Mobile (or WhatsApp). Active subscriptions will be removed.</p>
     </div>
 
     <div class="file-input-wrapper">
@@ -32,7 +33,8 @@
       <ion-button
         fill="outline"
         expand="block"
-        (click)="downloadServerTemplate()">
+        (click)="downloadServerTemplate()"
+        *ngIf="uploadType !== 'remove-subscriptions'">
         <ion-icon slot="start" name="download-outline"></ion-icon>
         Template (with current users)
       </ion-button>
@@ -101,7 +103,7 @@
             <div class="stat-value warning">{{ uploadResult.summary?.skipped || 0 }}</div>
             <div class="stat-label">Skipped</div>
           </div>
-          <div class="stat-item" *ngIf="uploadType === 'subscriptions'">
+          <div class="stat-item" *ngIf="isSubscriptionUpload()">
             <div class="stat-value success">{{ uploadResult.summary?.successCount || 0 }}</div>
             <div class="stat-label">Success</div>
           </div>
@@ -118,7 +120,7 @@
     </ion-card>
 
     <!-- Successfully Processed Rows -->
-    <ion-card *ngIf="(uploadType === 'users' && uploadResult.created?.length > 0) || (uploadType === 'subscriptions' && uploadResult.success?.length > 0)" class="results-card success-card">
+    <ion-card *ngIf="(uploadType === 'users' && uploadResult.created?.length > 0) || (isSubscriptionUpload() && uploadResult.success?.length > 0)" class="results-card success-card">
       <ion-card-header>
         <ion-card-title>
           <ion-icon name="checkmark-circle" color="success"></ion-icon>
@@ -136,6 +138,9 @@
               </p>
               <p *ngIf="uploadType === 'subscriptions'">
                 {{ item.email || item.mobile }} - Plan: {{ item.planCode }} ({{ item.planName }})
+              </p>
+              <p *ngIf="uploadType === 'remove-subscriptions'">
+                {{ item.email || item.mobile }} - Subscription removed
               </p>
             </ion-label>
           </ion-item>
@@ -164,7 +169,7 @@
     </ion-card>
 
     <!-- Failed Rows -->
-    <ion-card *ngIf="(uploadType === 'users' && uploadResult.failed?.length > 0) || (uploadType === 'subscriptions' && uploadResult.failed?.length > 0)" class="results-card danger-card">
+    <ion-card *ngIf="(uploadType === 'users' && uploadResult.failed?.length > 0) || (isSubscriptionUpload() && uploadResult.failed?.length > 0)" class="results-card danger-card">
       <ion-card-header>
         <ion-card-title>
           <ion-icon name="close-circle" color="danger"></ion-icon>

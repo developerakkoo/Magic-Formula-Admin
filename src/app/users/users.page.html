@@ -29,6 +29,10 @@
           <ion-icon slot="start" name="document-outline"></ion-icon>
           Bulk Subscriptions
         </ion-button>
+        <ion-button fill="outline" size="small" color="warning" (click)="openBulkUpload('remove-subscriptions')">
+          <ion-icon slot="start" name="remove-circle-outline"></ion-icon>
+          Bulk Remove Subscriptions
+        </ion-button>
         <ion-button fill="solid" size="small" (click)="addUser()">
           <ion-icon slot="start" name="person-add-outline"></ion-icon>
           Add User
@@ -45,7 +49,7 @@
           <ion-input
             [(ngModel)]="searchQuery"
             (ionInput)="onSearch()"
-            placeholder="Name, email, or mobile"
+            placeholder="Search all user fields…"
             fill="outline"
             clearable="true">
             <ion-icon slot="start" name="search-outline"></ion-icon>
@@ -62,6 +66,9 @@
             interface="popover"
             fill="outline">
             <ion-select-option value="all">All Users</ion-select-option>
+            <ion-select-option value="blocked">Blocked</ion-select-option>
+            <ion-select-option value="pending">Pending Approval</ion-select-option>
+            <ion-select-option value="rejected">Rejected</ion-select-option>
             <ion-select-option value="live">Live Users</ion-select-option>
             <ion-select-option value="subscribed">Subscribed</ion-select-option>
             <ion-select-option value="unsubscribed">Unsubscribed</ion-select-option>
@@ -98,19 +105,31 @@
           </ion-button>
         </div>
 
-        <!-- Device Conflicts Toggle -->
+        <!-- Quick Filters -->
         <div class="col-12 col-md-4 col-lg-3">
           <label class="filter-label">Quick Filters</label>
-          <ion-button
-            expand="block"
-            fill="outline"
-            size="default"
-            [color]="showDeviceConflicts ? 'primary' : 'medium'"
-            (click)="toggleDeviceConflicts()"
-            class="device-conflicts-btn">
-            <ion-icon slot="start" name="phone-portrait-outline"></ion-icon>
-            <span>Device Conflicts</span>
-          </ion-button>
+          <div class="d-flex flex-column gap-2">
+            <ion-button
+              expand="block"
+              fill="outline"
+              size="default"
+              [color]="showPendingRegistrations ? 'primary' : 'medium'"
+              (click)="togglePendingRegistrations()"
+              class="device-conflicts-btn">
+              <ion-icon slot="start" name="hourglass-outline"></ion-icon>
+              <span>Pending Registrations</span>
+            </ion-button>
+            <ion-button
+              expand="block"
+              fill="outline"
+              size="default"
+              [color]="showDeviceConflicts ? 'primary' : 'medium'"
+              (click)="toggleDeviceConflicts()"
+              class="device-conflicts-btn">
+              <ion-icon slot="start" name="phone-portrait-outline"></ion-icon>
+              <span>Device Conflicts</span>
+            </ion-button>
+          </div>
         </div>
       </div>
     </div>
@@ -237,6 +256,22 @@
                   </ion-button>
                   <ion-button fill="clear" size="small" (click)="editUser(user)">
                     <ion-icon name="create-outline"></ion-icon>
+                  </ion-button>
+                  <ion-button
+                    *ngIf="isPendingRegistration(user)"
+                    fill="clear"
+                    size="small"
+                    color="success"
+                    (click)="approveRegistration(user)">
+                    <ion-icon name="checkmark-done-outline"></ion-icon>
+                  </ion-button>
+                  <ion-button
+                    *ngIf="isPendingRegistration(user)"
+                    fill="clear"
+                    size="small"
+                    color="danger"
+                    (click)="rejectRegistration(user)">
+                    <ion-icon name="close-circle-outline"></ion-icon>
                   </ion-button>
                   <ion-button
                     fill="clear"
