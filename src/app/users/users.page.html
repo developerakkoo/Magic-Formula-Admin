@@ -134,6 +134,25 @@
       </div>
     </div>
 
+    <!-- Active Filters -->
+    <div class="active-filters" *ngIf="showDeviceConflicts || showPendingRegistrations">
+      <span class="active-filters-label">Active filters:</span>
+      <div class="filter-chip" *ngIf="showDeviceConflicts">
+        <ion-icon name="phone-portrait-outline"></ion-icon>
+        <span>Device Conflicts</span>
+        <button type="button" class="chip-remove" (click)="toggleDeviceConflicts()" aria-label="Remove device conflicts filter">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+      <div class="filter-chip" *ngIf="showPendingRegistrations">
+        <ion-icon name="hourglass-outline"></ion-icon>
+        <span>Pending Registrations</span>
+        <button type="button" class="chip-remove" (click)="togglePendingRegistrations()" aria-label="Remove pending registrations filter">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+    </div>
+
     <!-- Bulk Actions Bar -->
     <div class="bulk-actions" *ngIf="selectedUsers.length > 0">
       <div class="bulk-info">
@@ -166,7 +185,7 @@
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="!isLoading && filteredUsers.length === 0" class="empty-state">
+    <div *ngIf="!isLoading && !showDeviceConflicts && filteredUsers.length === 0" class="empty-state">
       <ion-icon name="people-outline"></ion-icon>
       <h3>No users found</h3>
       <p>{{ searchQuery ? 'Try adjusting your search criteria' : 'Get started by adding a new user' }}</p>
@@ -177,7 +196,7 @@
     </div>
 
     <!-- Users Table - Desktop View -->
-    <div *ngIf="!isLoading && filteredUsers.length > 0" class="table-wrapper d-none d-md-block">
+    <div *ngIf="!isLoading && !showDeviceConflicts && filteredUsers.length > 0" class="table-wrapper d-none d-md-block">
       <div class="table-container">
         <div class="table-responsive">
           <table class="table table-striped table-hover align-middle">
@@ -293,7 +312,7 @@
     </div>
 
     <!-- Users Cards - Mobile View -->
-    <div *ngIf="!isLoading && filteredUsers.length > 0" class="d-md-none">
+    <div *ngIf="!isLoading && !showDeviceConflicts && filteredUsers.length > 0" class="d-md-none">
       <div class="row g-3">
         <div class="col-12" *ngFor="let user of filteredUsers">
           <div class="card user-card">
@@ -376,12 +395,17 @@
     </div>
 
     <!-- Device Conflicts Section -->
-    <div *ngIf="showDeviceConflicts && deviceConflictUsers.length > 0" class="device-conflicts-section">
+    <div *ngIf="!isLoading && showDeviceConflicts" class="device-conflicts-section">
       <div class="section-header">
         <h2>Device Login Conflicts</h2>
         <p>Users blocked for attempting to login from a new device</p>
       </div>
-      <div class="conflicts-list">
+      <div *ngIf="deviceConflictUsers.length === 0" class="conflicts-empty">
+        <ion-icon name="phone-portrait-outline"></ion-icon>
+        <h3>No device conflicts</h3>
+        <p>There are currently no device login conflicts to review.</p>
+      </div>
+      <div class="conflicts-list" *ngIf="deviceConflictUsers.length > 0">
         <div class="conflict-card" *ngFor="let user of deviceConflictUsers" [ngClass]="{'device-change-request': user.conflictType === 'DEVICE_CHANGE_REQUESTED'}">
           <div class="conflict-info">
             <div class="conflict-header">

@@ -205,6 +205,62 @@
   }
 }
 
+// Active Filters
+.active-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  .active-filters-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #9aa0ad;
+  }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #0f1115;
+    color: #ffffff;
+    border-radius: 999px;
+    padding: 6px 8px 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+
+    ion-icon {
+      font-size: 16px;
+    }
+
+    .chip-remove {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      cursor: pointer;
+      padding: 0;
+      transition: background-color 0.2s ease;
+
+      ion-icon {
+        font-size: 14px;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.32);
+      }
+    }
+  }
+}
+
 // Bulk Actions Bar
 .bulk-actions {
   background: #0f1115;
@@ -524,6 +580,29 @@
       margin: 0 0 8px;
       font-size: 20px;
       font-weight: 700;
+      color: #0f1115;
+    }
+
+    p {
+      margin: 0;
+      color: #6a7182;
+      font-size: 14px;
+    }
+  }
+
+  .conflicts-empty {
+    text-align: center;
+    padding: 40px 20px;
+
+    ion-icon {
+      font-size: 48px;
+      color: #9aa0ad;
+      margin-bottom: 12px;
+    }
+
+    h3 {
+      margin: 0 0 6px;
+      font-size: 18px;
       color: #0f1115;
     }
 

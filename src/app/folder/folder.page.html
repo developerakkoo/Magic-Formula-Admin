@@ -122,32 +122,104 @@
             30 Days
           </ion-button>
           <ion-button 
-            fill="outline"
+            [fill]="selectedDateRange === 'all' ? 'solid' : 'outline'"
             size="small"
-            (click)="showCustomDatePicker = !showCustomDatePicker"
+            (click)="onDateRangeChange('all')"
+            [disabled]="isLoading">
+            All Time
+          </ion-button>
+          <ion-button 
+            [fill]="selectedDateRange === 'custom' ? 'solid' : 'outline'"
+            size="small"
+            (click)="onDateRangeChange('custom')"
             [disabled]="isLoading">
             Custom
           </ion-button>
         </div>
       </div>
 
+      <div class="active-filter-chip" *ngIf="periodLabel">
+        <span>Showing {{ periodLabel }}</span>
+        <button type="button" class="chip-remove" (click)="clearDateFilter()" aria-label="Clear date filter">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+
       <div *ngIf="showCustomDatePicker" class="custom-date-picker">
-        <ion-datetime
-          presentation="date"
-          [showDefaultButtons]="true"
-          [doneText]="'Apply'"
-          [cancelText]="'Cancel'"
-          (ionChange)="onCustomDateChange($event)"
-          (ionCancel)="showCustomDatePicker = false">
-        </ion-datetime>
+        <div class="custom-date-row">
+          <label>
+            <span class="filter-label">Start date</span>
+            <ion-input type="date" [(ngModel)]="customStartDate" fill="outline"></ion-input>
+          </label>
+          <label>
+            <span class="filter-label">End date</span>
+            <ion-input type="date" [(ngModel)]="customEndDate" fill="outline"></ion-input>
+          </label>
+          <ion-button size="small" (click)="applyCustomDateRange()" [disabled]="isLoading">Apply</ion-button>
+        </div>
       </div>
 
-      <div *ngIf="isLoading" class="charts-loading">
+      <div class="period-kpis" [class.loading]="isLoading">
+        <div class="kpi-card" *ngIf="!isLoading || analyticsData">
+          <p class="label">Total Purchases</p>
+          <h3>{{ analyticsData?.summary?.totalPurchases || 0 }}</h3>
+          <p class="hint" *ngIf="analyticsData?.comparison">
+            {{ formatChangePct(analyticsData!.comparison.purchaseChangePct) }} vs prev period
+          </p>
+        </div>
+        <div class="kpi-card" *ngIf="!isLoading || analyticsData">
+          <p class="label">Total Revenue</p>
+          <h3>₹{{ formatCurrency(analyticsData?.summary?.totalRevenue || 0) }}</h3>
+          <p class="hint" *ngIf="analyticsData?.comparison">
+            {{ formatChangePct(analyticsData!.comparison.revenueChangePct) }} vs prev period
+          </p>
+        </div>
+        <div class="kpi-card" *ngIf="!isLoading || analyticsData">
+          <p class="label">Avg Order Value</p>
+          <h3>₹{{ formatCurrency(analyticsData?.summary?.averageOrderValue || 0) }}</h3>
+          <p class="hint">Per subscription in range</p>
+        </div>
+        <div class="kpi-card" *ngIf="!isLoading || analyticsData">
+          <p class="label">Paid vs Admin</p>
+          <h3>{{ analyticsData?.summary?.paidPurchases || 0 }} / {{ analyticsData?.summary?.adminAssignedPurchases || 0 }}</h3>
+          <p class="hint">Razorpay / admin assigned</p>
+        </div>
+        <ng-container *ngIf="isLoading && !analyticsData">
+          <div class="kpi-card" *ngFor="let i of [1,2,3,4]">
+            <ion-skeleton-text animated style="width: 60%; height: 14px;"></ion-skeleton-text>
+            <ion-skeleton-text animated style="width: 40%; height: 28px; margin-top: 8px;"></ion-skeleton-text>
+          </div>
+        </ng-container>
+      </div>
+
+      <div *ngIf="loadError && !isLoading" class="error-state">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <p>{{ loadError }}</p>
+        <ion-button fill="outline" size="small" (click)="retryLoadAnalytics()">Retry</ion-button>
+      </div>
+
+      <div *ngIf="isLoading && !hasChartData && !analyticsData" class="charts-loading">
         <ion-skeleton-text animated style="width: 100%; height: 300px; border-radius: 12px;"></ion-skeleton-text>
         <ion-skeleton-text animated style="width: 100%; height: 300px; border-radius: 12px;"></ion-skeleton-text>
       </div>
 
-      <div *ngIf="!isLoading && filteredData.length > 0" class="charts-grid">
+      <div *ngIf="hasChartData" class="charts-section" [class.loading]="isLoading">
+      <div class="charts-grid charts-grid-trend">
+        <div class="chart-card chart-card-wide">
+          <div class="chart-header">
+            <h3>Revenue & Purchases Trend</h3>
+          </div>
+          <div *ngIf="hasTrendData" class="chart-container chart-container-trend">
+            <canvas #trendChartCanvas></canvas>
+          </div>
+          <div *ngIf="!hasTrendData" class="trend-empty">
+            <ion-icon name="analytics-outline"></ion-icon>
+            <p>No daily trend data for this period</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
         <div class="chart-card">
           <div class="chart-header">
             <h3>Most Purchased Plans</h3>
@@ -171,13 +243,14 @@
           </div>
         </div>
       </div>
-
-      <div *ngIf="!isLoading && filteredData.length === 0" class="empty-state">
-        <ion-icon name="bar-chart-outline"></ion-icon>
-        <p>No subscription data available</p>
       </div>
 
-      <div *ngIf="!isLoading && filteredData.length > 0" class="insights-row">
+      <div *ngIf="!isLoading && !loadError && !hasChartData" class="empty-state">
+        <ion-icon name="bar-chart-outline"></ion-icon>
+        <p>No subscriptions in this date range</p>
+      </div>
+
+      <div *ngIf="hasChartData" class="insights-row" [class.loading]="isLoading">
         <div class="insight-card">
           <ion-icon name="trophy-outline"></ion-icon>
           <div class="insight-content">
@@ -198,6 +271,32 @@
             <p class="insight-label">Average Subscription Value</p>
             <p class="insight-value">₹{{ formatCurrency(insights.averageValue) }}</p>
           </div>
+        </div>
+      </div>
+
+      <div *ngIf="tableRows.length > 0" class="plan-breakdown-table" [class.loading]="isLoading">
+        <h3>Plan Breakdown</h3>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Plan</th>
+                <th>Duration</th>
+                <th>Purchases</th>
+                <th>Revenue</th>
+                <th>Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of tableRows">
+                <td>{{ row.planTitle }}</td>
+                <td>{{ row.durationInMonths }} mo</td>
+                <td>{{ row.purchases }}</td>
+                <td>₹{{ formatCurrency(row.revenue) }}</td>
+                <td>{{ getPlanSharePct(row.revenue) }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>

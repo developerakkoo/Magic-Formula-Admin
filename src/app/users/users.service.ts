@@ -343,6 +343,16 @@ export class UsersService {
     );
   }
 
+  private normalizeRegistrationStatus(
+    status?: string
+  ): 'pending' | 'approved' | 'rejected' {
+    const normalized = String(status || 'approved').trim().toLowerCase()
+    if (normalized === 'pending' || normalized === 'rejected') {
+      return normalized
+    }
+    return 'approved'
+  }
+
   /**
    * Map date strings to Date objects and construct profile picture URL
    */
@@ -355,6 +365,7 @@ export class UsersService {
     return {
       ...user,
       profilePic: profilePicUrl,
+      registrationStatus: this.normalizeRegistrationStatus(user.registrationStatus),
       planExpiry: user.planExpiry ? new Date(user.planExpiry) : undefined,
       createdAt: user.createdAt ? new Date(user.createdAt) : undefined,
       updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined,
